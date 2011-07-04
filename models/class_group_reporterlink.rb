@@ -10,7 +10,7 @@ class Service_watcher::Group_reporterlink < Knj::Datarow
   end
   
   def self.list(d)
-    sql = "SELECT * FROM groups_reporterlinks WHERE 1=1"
+    sql = "SELECT * FROM #{table} WHERE 1=1"
     
     ret = list_helper(d)
     d.args.each do |key, val|

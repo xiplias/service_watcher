@@ -1,6 +1,6 @@
 class Service_watcher::Group < Knj::Datarow
   def self.list(d)
-    sql = "SELECT * FROM groups WHERE 1=1"
+    sql = "SELECT * FROM #{table} WHERE 1=1"
     
     ret = list_helper(d)
     d.args.each do |key, val|

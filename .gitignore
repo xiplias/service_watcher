@@ -46,3 +46,6 @@ pkg
 
 # For rubinius:
 #*.rbc
+
+# For service_watcher
+files/database.sqlite3
