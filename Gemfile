@@ -8,6 +8,7 @@ gem "sqlite3"
 gem "knjdbrevision"
 gem "knjrbfw"
 gem "knjappserver"
+gem "mail"
 
 # Add dependencies to develop your gem here.
 # Include everything needed to run rake, tests, features, etc.

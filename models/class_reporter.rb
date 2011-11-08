@@ -1,19 +1,4 @@
 class Service_watcher::Reporter < Knj::Datarow
-  def self.list(d)
-    sql = "SELECT * FROM #{table} WHERE 1=1"
-    
-    ret = list_helper(d)
-    d.args.each do |key, val|
-        raise sprintf(_("Invalid key: %s."), key)
-    end
-    
-    sql += ret[:sql_where]
-    sql += ret[:sql_order]
-    sql += ret[:sql_limit]
-    
-    return d.ob.list_bysql(:Reporter, sql)
-  end
-  
   def delete
     self.groups.each do |link|
       ob.delete(link)
@@ -27,12 +12,12 @@ class Service_watcher::Reporter < Knj::Datarow
   end
   
   def del_details
-    db.delete("reporters_options", {"reporter_id" => self["id"]})
+    db.delete("reporters_options", {"reporter_id" => id})
   end
   
   def details
     data = {}
-    q_details = db.select(:reporters_options, {"reporter_id" => self["id"]})
+    q_details = db.select(:reporters_options, {"reporter_id" => id})
     while(d_details = q_details.fetch)
       data[d_details[:opt_name]] = d_details[:opt_value]
     end

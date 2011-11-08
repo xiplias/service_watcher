@@ -1,0 +1,23 @@
+<%
+  begin
+    raise "No controller given by URL c-variable." if !_get["c"]
+    raise "No action given by URL a-variable." if !_get["a"]
+    
+    controller = _sw.controllers[_get["c"]]
+    raise sprintf(_("No controller found by that name: '%s'."), _get["c"]) if !controller
+    
+    raise sprintf(_("No such action on controller: '%s'."), _get["a"]) if !controller.respond_to?(_get["a"])
+    res = controller.send(_get["a"])
+    
+    print JSON.generate(
+      :type => :response,
+      :data => res
+    )
+  rescue Exception => e
+    print JSON.generate(
+      :type => :error,
+      :error_msg => e.message,
+      :error_type => e.class.name
+    )
+  end
+%>

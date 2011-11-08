@@ -1,22 +1,37 @@
-require "knjrbfw"
+#require "knjrbfw"
 require "knj/autoload"
 
 class Service_watcher
-  plugins_path = "#{File.dirname(__FILE__)}/../plugins"
-  Dir.new(plugins_path).entries.each do |plugin_file|
-    if (plugin_file != "." and plugin_file != "..")
-        autoload(("ServiceWatcherPlugin" + Knj::Php.ucwords(plugin_file.slice(28..-4))).to_sym, plugins_path + "/" + plugin_file)
-    end
-  end
-
-  reporters_path = "#{File.dirname(__FILE__)}/../reporters"
-  Dir.new(reporters_path).entries.each do |reporter_file|
-    if (reporter_file != "." and reporter_file != "..")
-        autoload(("ServiceWatcherReporter" + Knj::Php.ucwords(reporter_file.slice(30..-4))).to_sym, reporters_path + "/" + reporter_file)
-    end
-  end
+  attr_reader :appserver, :controllers, :db, :ob, :plugins
+  
+  class Controllers; end
   
   def initialize(args = {})
+    @plugins = {}
+    
+    path = "#{File.dirname(__FILE__)}/../"
+    require "#{path}/include/controller.rb"
+    require "#{path}/include/client.rb"
+    
+    plugins_path = "#{path}/plugins"
+    Dir.foreach(plugins_path) do |plugin_file|
+      if plugin_file != "." and plugin_file != ".."
+        plugin_name = plugin_file.slice(28..-4)
+        @plugins[plugin_name] = {
+          :name => plugin_name
+        }
+        
+        autoload(("ServiceWatcherPlugin" + Knj::Php.ucwords(plugin_file.slice(28..-4))).to_sym, plugins_path + "/" + plugin_file)
+      end
+    end
+    
+    reporters_path = "#{path}/reporters"
+    Dir.foreach(reporters_path) do |reporter_file|
+      if reporter_file != "." and reporter_file != ".."
+        autoload(("ServiceWatcherReporter" + Knj::Php.ucwords(reporter_file.slice(30..-4))).to_sym, reporters_path + "/" + reporter_file)
+      end
+    end
+    
     #Make arguments array and merge with the given arguments.
     @args = {
       :port => 80,
@@ -27,45 +42,38 @@ class Service_watcher
     @ob = Knj::Objects.new(
       :db => @db,
       :class_path => "#{File.dirname(__FILE__)}/../models",
-      :module => Service_watcher
+      :module => Service_watcher,
+      :datarow => true
     )
     
-    @erbhandler = Knjappserver::ERBHandler.new
+    @controllers = {}
+    controllers_path = "#{File.dirname(__FILE__)}/../controllers"
+    Dir.foreach(controllers_path) do |controller_file|
+      match = controller_file.match(/^controller_(.+)\.rb$/)
+      next if !match
+      
+      require "#{controllers_path}/#{controller_file}"
+      @controllers[match[1].downcase] = Service_watcher::Controllers.const_get(Knj::Php.ucwords(match[1])).new(:sw => self)
+    end
+    
     @appserver = Knjappserver.new(
-        :debug => false,
-        :autorestart => false,
-        :verbose => false,
-        :title => "Service_watcher",
-        :port => @args[:port],
-        :host => @args[:host],
-        :default_page => "index.rhtml",
-        :doc_root => "#{File.dirname(__FILE__)}/../json_pages",
-        :hostname => false,
-        :default_filetype => "text/html",
-        :engine_webrick => true,
-        :error_report_emails => [@args[:admin_email]],
-        :error_report_from => @args[:admin_email],
-        :locales_root => "#{File.dirname(__FILE__)}/../locales",
-        :max_requests_working => 5,
-        :filetypes => {
-          :jpg => "image/jpeg",
-          :gif => "image/gif",
-          :png => "image/png",
-          :html => "text/html",
-          :htm => "text/html",
-          :rhtml => "text/html",
-          :css => "text/css",
-          :xml => "text/xml",
-          :js => "text/javascript"
-        },
-        :handlers => [
-          :file_ext => "rhtml",
-          :callback => @erbhandler.method(:erb_handler)
-        ],
-        :db => @db,
-        :smtp_args => @args[:smtp]
+      :debug => false,
+      :autorestart => false,
+      :title => "Service_watcher",
+      :port => @args[:port],
+      :host => @args[:host],
+      :doc_root => "#{File.dirname(__FILE__)}/../json_pages",
+      :hostname => false,
+      :error_report_emails => [@args[:admin_email]],
+      :error_report_from => @args[:admin_email],
+      :locales_root => "#{File.dirname(__FILE__)}/../locales",
+      :locales_gettext_funcs => true,
+      :locale_default => "en_GB",
+      :db => @db,
+      :smtp_args => @args[:smtp]
     )
-    @appserver.update_db
+    @appserver.define_magic_var(:_sw, self)
+    @appserver.define_magic_var(:_ob, @ob)
     @appserver.start
   end
   
