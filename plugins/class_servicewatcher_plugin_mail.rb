@@ -1,33 +1,26 @@
-class ServiceWatcherPluginMail
+class Service_watcher::Plugin::Mail < Service_watcher::Plugin
 	def self.paras
-		return [
-			{
-				"title" => _("Host"),
-				"name" => "txthost"
-			},
-			{
-				"title" => _("Port"),
-				"name" => "txtport"
-			},
-			{
-				"title" => _("Type"),
-				"opts" => [_("POP"), _("IMAP"), _("SMTP")],
-				"name" => "seltype"
-			},
-			{
-				"title" => _("SSL"),
-				"name" => "chessl"
-			},
-			{
-				"title" => _("Username"),
-				"name" => "txtuser"
-			},
-			{
-				"type" => "password",
-				"title" => _("Password"),
-				"name" => "txtpass"
-			}
-		]
+		return [{
+      "title" => _("Host"),
+      "name" => "txthost"
+    },{
+      "title" => _("Port"),
+      "name" => "txtport"
+    },{
+      "title" => _("Type"),
+      "opts" => [_("POP"), _("IMAP"), _("SMTP")],
+      "name" => "seltype"
+    },{
+      "title" => _("SSL"),
+      "name" => "chessl"
+    },{
+      "title" => _("Username"),
+      "name" => "txtuser"
+    },{
+      "type" => "password",
+      "title" => _("Password"),
+      "name" => "txtpass"
+    }]
 	end
 	
 	def self.check(paras)
@@ -39,20 +32,19 @@ class ServiceWatcherPluginMail
 		
 		if paras["seltype"] == "IMAP"
 			conn = Net::IMAP.new(paras["txthost"], paras["txtport"].to_i, sslval)
-			conn.login(paras["txtuser"], paras["txtpass"])
+			conn.login(paras["txtuser"], paras["txtpass"]) if paras["txtuser"].to_s.length > 0 and paras["txtpass"].to_s.length > 0
 		elsif paras["seltype"] == "POP"
 			conn = Net::POP.new(paras["txthost"], paras["txtport"].to_i, sslval)
-			conn.start(paras["txtuser"], paras["txtpass"])
+			conn.start(paras["txtuser"], paras["txtpass"]) if paras["txtuser"].to_s.length > 0 and paras["txtpass"].to_s.length > 0
 		elsif paras["seltype"] == "SMTP"
 			conn = Net::SMTP.new(paras["txthost"], paras["txtport"].to_i)
-			
-			if (sslval)
-				conn.enable_ssl
-			end
+      conn.enable_ssl if sslval
 			
 			conn.start(paras["txthost"], paras["txtuser"], paras["txtpass"]) do |smtp|
 				#nothing here - but it is needed to raise error if failing.
 			end
-		end
+		else
+      raise sprintf(_("Unknown type: '%s'."), paras["seltype"])
+    end
 	end
 end

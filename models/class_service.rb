@@ -1,4 +1,27 @@
 class Service_watcher::Service < Knj::Datarow
+  joined_tables(
+    :Option => {
+      :where => {
+        "object_class" => "Service",
+        "object_id" => {:type => :col, :name => :id}
+      }
+    }
+  )
+  
+  has_many [{
+    :class => :Option,
+    :method => :options,
+    :where => {
+      "object_class" => "Service",
+      "object_id" => {:type => :col, :table => :Service, :name => :id}
+    },
+    :col => :object_id
+  }]
+  
+  has_one [
+    :Group
+  ]
+  
   def delete
     self.del_details
   end
@@ -17,9 +40,8 @@ class Service_watcher::Service < Knj::Datarow
   
   def details
     data = {}
-    q_details = db.select(:services_options, {"service_id" => self["id"]})
-    while d_details = q_details.fetch
-      data[d_details["opt_name"]] = d_details["opt_value"]
+    self.options.each do |option|
+      data[option[:key]] = option[:value]
     end
     
     return data
@@ -44,7 +66,12 @@ class Service_watcher::Service < Knj::Datarow
     return reporters
   end
   
-  def group
-    return ob.get(:Group, self[:group_id])
+  def plugin_class
+    raise _("No plugin set for this service.") if self[:plugin].to_s.length <= 0
+    return Service_watcher::Plugin.const_get(Knj::Php.ucwords(self[:plugin]))
+  end
+  
+  def check
+    self.plugin_class.check(self.details)
   end
 end

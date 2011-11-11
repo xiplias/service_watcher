@@ -5,6 +5,7 @@ class Service_watcher
   attr_reader :appserver, :controllers, :db, :ob, :plugins
   
   class Controllers; end
+  class Plugin; end
   
   def initialize(args = {})
     @plugins = {}
@@ -16,12 +17,14 @@ class Service_watcher
     plugins_path = "#{path}/plugins"
     Dir.foreach(plugins_path) do |plugin_file|
       if plugin_file != "." and plugin_file != ".."
+        require "#{plugins_path}/#{plugin_file}" if plugin_file != "." and plugin_file != ".."
         plugin_name = plugin_file.slice(28..-4)
         @plugins[plugin_name] = {
-          :name => plugin_name
+          :name => plugin_name,
+          :class => Service_watcher::Plugin.const_get(Knj::Php.ucwords(plugin_name))
         }
         
-        autoload(("ServiceWatcherPlugin" + Knj::Php.ucwords(plugin_file.slice(28..-4))).to_sym, plugins_path + "/" + plugin_file)
+        #autoload(("ServiceWatcherPlugin" + Knj::Php.ucwords(plugin_file.slice(28..-4))).to_sym, plugins_path + "/" + plugin_file)
       end
     end
     
@@ -38,14 +41,36 @@ class Service_watcher
       :host => "0.0.0.0"
     }.merge(args)
     
-    @db = Knj::Db.new(@args[:db_args])
+    
+    #Spawn primary database.
+    if args[:db]
+      @db = args[:db]
+    elsif args[:db_args]
+      @db = Knj::Db.new(@args[:db_args])
+    else
+      raise "No database given in any form."
+    end
+    
+    #Make sure database is updated.
+    dbschemapath = "#{File.dirname(__FILE__)}/../files/database_schema.rb"
+    raise "'#{dbschemapath}' did not exist." if !File.exists?(dbschemapath)
+    require dbschemapath
+    raise "No schema-variable was spawned." if !$schema
+    dbrev = Knjdbrevision.new
+    dbrev.init_db($schema, @db)
+    
+    
+    #Spawn objects-handler.
     @ob = Knj::Objects.new(
       :db => @db,
       :class_path => "#{File.dirname(__FILE__)}/../models",
       :module => Service_watcher,
-      :datarow => true
+      :datarow => true,
+      :require_all => true
     )
     
+    
+    #Load all the controllers.
     @controllers = {}
     controllers_path = "#{File.dirname(__FILE__)}/../controllers"
     Dir.foreach(controllers_path) do |controller_file|
@@ -56,6 +81,8 @@ class Service_watcher
       @controllers[match[1].downcase] = Service_watcher::Controllers.const_get(Knj::Php.ucwords(match[1])).new(:sw => self)
     end
     
+    
+    #Spawn the appserver.
     @appserver = Knjappserver.new(
       :debug => false,
       :autorestart => false,
@@ -72,14 +99,19 @@ class Service_watcher
       :db => @db,
       :smtp_args => @args[:smtp]
     )
+    
+    
+    #Define various variables which should be available in the various controllers.
     @appserver.define_magic_var(:_sw, self)
     @appserver.define_magic_var(:_ob, @ob)
+    
+    
+    #Start the appserver.
     @appserver.start
   end
   
   def self.plugin_class(string)
-    object_name = "ServiceWatcherPlugin" + Knj::Php.ucwords(string)
-    return Kernel.const_get(object_name)
+    return Service_watcher::Plugin.const_get(Knj::Php.ucwords(string))
   end
   
   def self.check_and_report(args)

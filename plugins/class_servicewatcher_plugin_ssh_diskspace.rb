@@ -1,4 +1,4 @@
-class ServiceWatcherPluginSsh_diskspace
+class Service_watcher::Plugin::Ssh_diskspace < Service_watcher::Plugin
 	def self.paras
 		return [{
 			"title" => _("Hostname"),

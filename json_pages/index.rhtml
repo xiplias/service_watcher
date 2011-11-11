@@ -17,7 +17,8 @@
     print JSON.generate(
       :type => :error,
       :error_msg => e.message,
-      :error_type => e.class.name
+      :error_type => e.class.name,
+      :error_backtrace => e.backtrace
     )
   end
 %>

@@ -1,4 +1,4 @@
-class ServiceWatcherPluginSsh_ftp
+class Service_watcher::Plugin::Ssh_ftp < Service_watcher::Plugin
 	def self.paras
 		return [{
 			"title" => _("SSH hostname"),

@@ -1,30 +1,24 @@
-class ServiceWatcherPluginMysql
+class Service_watcher::Plugin::Mysql < Service_watcher::Plugin
 	def self.paras
-		return [
-			{
-				"title" => _("Hostname"),
-				"name" => "txthost"
-			},
-			{
-				"title" => _("Port"),
-				"name" => "txtport",
-				"default" => "3306"
-			},
-			{
-				"title" => _("Username"),
-				"name" => "txtuser"
-			},
-			{
-				"type" => "password",
-				"title" => _("Password"),
-				"name" => "txtpasswd"
-			},
-			{
-				"title" => _("Database"),
-				"name" => "txtdb",
-				"default" => "mysql"
-			}
-		]
+		return [{
+      "title" => _("Hostname"),
+      "name" => "txthost"
+    },{
+      "title" => _("Port"),
+      "name" => "txtport",
+      "default" => "3306"
+    },{
+      "title" => _("Username"),
+      "name" => "txtuser"
+    },{
+      "type" => "password",
+      "title" => _("Password"),
+      "name" => "txtpasswd"
+    },{
+      "title" => _("Database"),
+      "name" => "txtdb",
+      "default" => "mysql"
+    }]
 	end
 	
 	def self.check(paras)
