@@ -40,7 +40,13 @@ $schema = {
       "columns" => [
         {"name" => "id", "type" => "int", "autoincr" => true, "primarykey" => true},
         {"name" => "name", "type" => "varchar"},
-        {"name" => "plugin", "type" => "varchar"}
+        {"name" => "plugin", "type" => "varchar"},
+        {"name" => "timeout", "type" => "int"},
+        {"name" => "date_lastrun", "type" => "datetime"},
+        {"name" => "group_id", "type" => "int"}
+      ],
+      "indexes" => [
+        {"name" => "group_id", "columns" => ["group_id"]}
       ]
     },
     "Service_reporterlink" => {

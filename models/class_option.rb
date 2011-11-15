@@ -1,3 +1,3 @@
-class Service_watcher::Option < Knj::Datarow
+class Service_watcher::Model::Option < Knj::Datarow
   
 end

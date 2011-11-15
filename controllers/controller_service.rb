@@ -14,7 +14,8 @@ class Service_watcher::Controllers::Service < Service_watcher::Controller
   def add
     service = _ob.add(:Service, {
       :name => _get["name"],
-      :plugin => _get["plugin"]
+      :plugin => _get["plugin"],
+      :group_id => _get["group_id"]
     })
     
     self.save_options(service)

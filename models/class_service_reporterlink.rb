@@ -1,4 +1,4 @@
-class Service_watcher::Service_reporterlink < Knj::Datarow
+class Service_watcher::Model::Service_reporterlink < Knj::Datarow
   has_one [
     :Reporter,
     :Service
@@ -10,7 +10,7 @@ class Service_watcher::Service_reporterlink < Knj::Datarow
     
     link = d.ob.list(:Service_reporterlink, {"service" => service, "reporter" => reporter})
     if link.length > 0
-      raise Errors::Notice, _("Such a reporter is already added for that service.")
+      raise Knj::Errors::Notice, _("Such a reporter is already added for that service.")
     end
   end
 end

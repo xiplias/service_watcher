@@ -1,4 +1,22 @@
-class Service_watcher::Reporter < Knj::Datarow
+class Service_watcher::Model::Reporter < Knj::Datarow
+  joined_tables(
+    :Option => {
+      :where => {
+        "object_class" => :Reporter,
+        "object_id" => {:type => :col, :table => :Reporter, :name => :id}
+      }
+    }
+  )
+  
+  has_many [{
+    :class => :Option,
+    :method => :options,
+    :where => {
+      "object_class" => :Reporter
+    },
+    :col => :object_id
+  }]
+  
   def delete
     self.groups.each do |link|
       ob.delete(link)
@@ -12,29 +30,23 @@ class Service_watcher::Reporter < Knj::Datarow
   end
   
   def del_details
-    db.delete("reporters_options", {"reporter_id" => id})
+    self.options.each do |opt|
+      ob.delete(opt)
+    end
   end
   
   def details
     data = {}
-    q_details = db.select(:reporters_options, {"reporter_id" => id})
-    while(d_details = q_details.fetch)
-      data[d_details[:opt_name]] = d_details[:opt_value]
+    self.options.each do |opt|
+      data[opt[:key]] = opt[:value]
     end
     
     return data
   end
   
-  def add_detail(name, value)
-    db.insert(:reporters_options, {"reporter_id" => self["id"], "opt_name" => name, "opt_value" => value})
-  end
-  
   def reporter_plugin
-    obj_name = "ServiceWatcherReporter" + Knj::Php::ucwords(self["plugin"])
-    return Kernel.const_get(obj_name).new(self.details)
+    return Service_watcher::Reporter.const_get(Knj::Php::ucwords(self[:plugin])).new(self.details)
   end
-  
-  alias plugin reporter_plugin
   
   def groups(args = {})
     return ob.list(:Group_reporterlink, {"reporter" => self}.merge(args))

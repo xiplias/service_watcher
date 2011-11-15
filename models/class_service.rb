@@ -1,8 +1,8 @@
-class Service_watcher::Service < Knj::Datarow
+class Service_watcher::Model::Service < Knj::Datarow
   joined_tables(
     :Option => {
       :where => {
-        "object_class" => "Service",
+        "object_class" => :Service,
         "object_id" => {:type => :col, :name => :id}
       }
     }
@@ -12,8 +12,7 @@ class Service_watcher::Service < Knj::Datarow
     :class => :Option,
     :method => :options,
     :where => {
-      "object_class" => "Service",
-      "object_id" => {:type => :col, :table => :Service, :name => :id}
+      "object_class" => :Service
     },
     :col => :object_id
   }]
@@ -22,20 +21,22 @@ class Service_watcher::Service < Knj::Datarow
     :Group
   ]
   
+  def self.add(d)
+    raise _("No plugin was given.") if d.data[:plugin].to_s.length <= 0
+    
+    if d.data[:group_id].to_i > 0
+      group = d.ob.get(:Group, d.data[:group_id])
+    end
+  end
+  
   def delete
-    self.del_details
+    self.options.each do |opt|
+      ob.delete(opt)
+    end
   end
   
   def del_details
     db.delete("services_options", {"service_id" => self["id"]})
-  end
-  
-  def add_detail(name, data)
-    db.insert("services_options", {
-      "service_id" => self["id"],
-      "opt_name" => name,
-      "opt_value" => data
-    })
   end
   
   def details
@@ -57,9 +58,11 @@ class Service_watcher::Service < Knj::Datarow
       reporters << link.reporter
     end
     
-    group.reporters.each do |link|
-      if !reporters.index(link.reporter)
-        reporters << link.reporter
+    if self.group
+      self.group.reporters.each do |link|
+        if reporters.index(link.reporter) == nil
+          reporters << link.reporter
+        end
       end
     end
     

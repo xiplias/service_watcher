@@ -1,3 +1,3 @@
-class Service_watcher::User < Knj::Datarow
+class Service_watcher::Model::User < Knj::Datarow
   
 end

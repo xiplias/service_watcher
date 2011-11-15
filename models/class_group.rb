@@ -1,17 +1,6 @@
-class Service_watcher::Group < Knj::Datarow
-  def self.list(d)
-    sql = "SELECT * FROM #{table} WHERE 1=1"
-    
-    ret = list_helper(d)
-    d.args.each do |key, val|
-      raise sprintf(_("Invalid key: %s."), key)
-    end
-    
-    sql += ret[:sql_where]
-    sql += ret[:sql_order]
-    sql += ret[:sql_limit]
-    
-    return d.ob.list_bysql(:Group, sql)
+class Service_watcher::Model::Group < Knj::Datarow
+  def self.add(d)
+    raise _("No name was given.") if d.data[:name].to_s.strip.length <= 0
   end
   
   def services(args = {})

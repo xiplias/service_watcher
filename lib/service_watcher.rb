@@ -1,11 +1,13 @@
-#require "knjrbfw"
+require "knjrbfw"
 require "knj/autoload"
 
 class Service_watcher
-  attr_reader :appserver, :controllers, :db, :ob, :plugins
+  attr_reader :appserver, :controllers, :db, :ob, :plugins, :reporters
   
   class Controllers; end
   class Plugin; end
+  class Reporter; end
+  class Model; end
   
   def initialize(args = {})
     @plugins = {}
@@ -28,11 +30,18 @@ class Service_watcher
       end
     end
     
+    @reporters = {}
+    
     reporters_path = "#{path}/reporters"
     Dir.foreach(reporters_path) do |reporter_file|
-      if reporter_file != "." and reporter_file != ".."
-        autoload(("ServiceWatcherReporter" + Knj::Php.ucwords(reporter_file.slice(30..-4))).to_sym, reporters_path + "/" + reporter_file)
-      end
+      next if reporter_file == "." or reporter_file == ".."
+      require "#{reporters_path}/#{reporter_file}"
+      
+      reporter_name = Knj::Php.ucwords(reporter_file.slice(30..-4))
+      @reporters[reporter_name] = {
+        :name => reporter_name,
+        :class => Service_watcher::Reporter.const_get(Knj::Php.ucwords(reporter_name))
+      }
     end
     
     #Make arguments array and merge with the given arguments.
@@ -64,7 +73,7 @@ class Service_watcher
     @ob = Knj::Objects.new(
       :db => @db,
       :class_path => "#{File.dirname(__FILE__)}/../models",
-      :module => Service_watcher,
+      :module => Service_watcher::Model,
       :datarow => true,
       :require_all => true
     )
@@ -83,7 +92,7 @@ class Service_watcher
     
     
     #Spawn the appserver.
-    @appserver = Knjappserver.new(
+    appserver_args = {
       :debug => false,
       :autorestart => false,
       :title => "Service_watcher",
@@ -98,7 +107,9 @@ class Service_watcher
       :locale_default => "en_GB",
       :db => @db,
       :smtp_args => @args[:smtp]
-    )
+    }
+    appserver_args.merge(@args[:knjappserver_args]) if @args.key?(:knjappserver_args)
+    @appserver = Knjappserver.new(appserver_args)
     
     
     #Define various variables which should be available in the various controllers.
@@ -106,32 +117,60 @@ class Service_watcher
     @appserver.define_magic_var(:_ob, @ob)
     
     
+    #Start main thread that runs service-checks automatically based on timeouts.
+    @thread = Knj::Thread.new do
+      self.service_checker
+    end
+    
     #Start the appserver.
     @appserver.start
   end
   
-  def self.plugin_class(string)
-    return Service_watcher::Plugin.const_get(Knj::Php.ucwords(string))
+  def service_checker
+    loop do
+      Thread.current[:running] = true
+      @ob.list(:Service) do |service|
+        run = false
+        cur_time = Time.new.to_i
+        service_date = service.date_lastrun
+        
+        if !service_date
+          run = true
+        else
+          service_time = service_date.time.to_i
+          if (service_time + service[:timeout].to_i) < cur_time
+            run = true
+          end
+        end
+        
+        self.check_and_report(service) if run
+      end
+      Thread.current[:running] = false
+      
+      sleep 1
+    end
   end
   
-  def self.check_and_report(args)
+  def check_and_report(args)
     staticmethod = false
     
-    if args.is_a?(Service_watcher::Service)
+    if args.is_a?(Service_watcher::Model::Service)
       args = {
         "service" => args,
-        "pluginname" => args["plugin"]
+        "pluginname" => args[:plugin]
       }
     end
     
     if !args["plugin"] and args["pluginname"]
-      classob = Service_watcher.plugin_class(args["pluginname"])
+      classob = Service_watcher::Plugin.const_get(Knj::Php.ucwords(args["pluginname"]))
       if classob.respond_to?("check")
         staticmethod = true
       else
         args["plugin"] = classob.new(args["service"].details)
       end
     end
+    
+    args["service"][:date_lastrun] = Time.now if args["service"]
     
     begin
       if staticmethod
@@ -158,5 +197,16 @@ class Service_watcher
   def self.parse_subject(args)
     subject = args["subject"].gsub("%subject%", args["error"].inspect.to_s)
     return subject
+  end
+  
+  #Stops the service-watcher gracefully. Stops the knjappserver and lets the checker-thread finish before killing it.
+  def stop
+    @appserver.stop
+    
+    if @thread
+      sleep 0.1 while @thread[:running]
+      @thread.kill
+      @thread = nil
+    end
   end
 end

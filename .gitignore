@@ -49,3 +49,4 @@ pkg
 
 # For service_watcher
 files/database.sqlite3
+spec/service_watcher_spec_smtp.json

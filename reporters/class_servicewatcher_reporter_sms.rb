@@ -1,4 +1,4 @@
-class ServiceWatcherReporterSms
+class Service_watcher::Reporter::Sms < Service_watcher::Reporter
 	def self.paras
 		return [
 			{
