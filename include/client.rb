@@ -1,6 +1,47 @@
+require "knj/datarow_custom"
+
 class Service_watcher::Client
+  class Model < Knj::Datarow_custom
+    def self.controller_name
+      return self.name.to_s.match(/::([^:]+?)$/)[1].downcase
+    end
+    
+    def self.class_name
+      return self.name.to_s.match(/::([^:]+?)$/)[1].to_sym
+    end
+    
+    def self.init_sw_model(classobj)
+      classobj.events.connect(:add) do |event, d|
+        data = _sw.request({:c => self.controller_name, :a => :add}.merge(d.data))
+        _ob.get(self.class_name, data)
+      end
+      
+      classobj.events.connect(:update) do |event, d|
+        _sw.request({:c => self.controller_name, :a => :update, :group_id => d.object.id}.merge(d.data))
+      end
+      
+      classobj.events.connect(:data_from_id) do |event, d|
+        data = _sw.request(:c => self.controller_name, :a => :get, :group_id => d.id)
+        raise _("No data received?") if !data
+        data
+      end
+    end
+    
+    def url
+      return "/?s=#{self.class.controller_name}_view&#{self.class.controller_name}_id=#{self.id}"
+    end
+    
+    def html
+      return "<a href=\"#{self.url}\">#{self.name.html}</a>"
+    end
+  end
+  
   #Initializes the HTTP-connection to the server with the given arguments.
   def initialize(args)
+    require "knj/http2"
+    require "knj/strings"
+    require "json"
+    
     @http = Knj::Http2.new(
       :host => args[:host],
       :port => args[:port],
@@ -58,6 +99,8 @@ class Service_watcher::Client
     end
     
     res = @http.get(url)
+    STDOUT.print "#{res.body}\n\n"
+    
     ret = JSON.parse(res.body)
     
     if ret["type"] == "error"

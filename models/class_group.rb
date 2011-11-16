@@ -14,4 +14,12 @@ class Service_watcher::Model::Group < Knj::Datarow
   def name
     return self[:name]
   end
+  
+  def update(hash)
+    hash.each do |key, val|
+      raise _("Empty name was given.") if key == :name and val.to_s.strip.length <= 0
+    end
+    
+    super(hash)
+  end
 end

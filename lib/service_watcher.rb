@@ -1,6 +1,3 @@
-require "knjrbfw"
-require "knj/autoload"
-
 class Service_watcher
   attr_reader :appserver, :controllers, :db, :ob, :plugins, :reporters
   
@@ -9,7 +6,23 @@ class Service_watcher
   class Reporter; end
   class Model; end
   
+  def self.path
+    return File.dirname(__FILE__)
+  end
+  
   def initialize(args = {})
+    #Make arguments array and merge with the given arguments.
+    @args = {
+      :port => 80,
+      :host => "0.0.0.0"
+    }.merge(args)
+    
+    require "#{@args[:knjappserver_path]}knjappserver"
+    require "#{@args[:knjrbfw_path]}knjrbfw"
+    require "#{@args[:knjdbrevision_path]}knjdbrevision"
+    require "knj/autoload"
+    require "knj/strings"
+    
     @plugins = {}
     
     path = "#{File.dirname(__FILE__)}/../"
@@ -43,12 +56,6 @@ class Service_watcher
         :class => Service_watcher::Reporter.const_get(Knj::Php.ucwords(reporter_name))
       }
     end
-    
-    #Make arguments array and merge with the given arguments.
-    @args = {
-      :port => 80,
-      :host => "0.0.0.0"
-    }.merge(args)
     
     
     #Spawn primary database.
@@ -108,7 +115,9 @@ class Service_watcher
       :db => @db,
       :smtp_args => @args[:smtp]
     }
-    appserver_args.merge(@args[:knjappserver_args]) if @args.key?(:knjappserver_args)
+    appserver_args[:knjrbfw_path] = @args[:knjrbfw_path] if @args.key?(:knjrbfw_path)
+    appserver_args[:knjdbrevision_path] = @args[:knjdbrevision_path] if @args.key?(:knjdbrevision_path)
+    appserver_args.merge!(@args[:knjappserver_args]) if @args.key?(:knjappserver_args)
     @appserver = Knjappserver.new(appserver_args)
     
     
@@ -208,5 +217,9 @@ class Service_watcher
       @thread.kill
       @thread = nil
     end
+  end
+  
+  def join
+    @appserver.join
   end
 end

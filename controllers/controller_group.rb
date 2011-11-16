@@ -5,7 +5,8 @@ class Service_watcher::Controllers::Group < Service_watcher::Controller
     })
     
     return {
-      :group_id => group.id
+      :id => group.id,
+      :name => group.name
     }
   end
   
@@ -27,5 +28,34 @@ class Service_watcher::Controllers::Group < Service_watcher::Controller
     return {
       :group_reporterlink_id => link.id
     }
+  end
+  
+  def list
+    ret = []
+    
+    _ob.list(:Group) do |group|
+      ret << {
+        :id => group.id,
+        :name => group.name
+      }
+    end
+    
+    return ret
+  end
+  
+  def get
+    group = _ob.get(:Group, _get["group_id"])
+    
+    return {
+      :id => group.id,
+      :name => group.name
+    }
+  end
+  
+  def update
+    group = _ob.get(:Group, _get["group_id"])
+    group.update(
+      :name => _get["name"]
+    )
   end
 end
