@@ -55,7 +55,7 @@ class Service_watcher::Client
   def initialize(args)
     require "knj/http2"
     require "knj/strings"
-    require "json"
+    require "knj/autoload/json_autoload"
     
     @http = Knj::Http2.new(
       :host => args[:host],

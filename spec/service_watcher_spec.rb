@@ -50,7 +50,12 @@ describe "ServiceWatcher" do
       :c => :reporter,
       :a => :add,
       :name => "TestReporter",
-      :plugin => :email,
+      :plugin => :email
+    )
+    $client.request(
+      :c => :reporter,
+      :a => :update_options,
+      :reporter_id => $reporter["id"],
       :options => JSON.parse(File.read("#{File.dirname(__FILE__)}/service_watcher_spec_smtp.json"))
     )
     $group = $client.request(
@@ -61,8 +66,8 @@ describe "ServiceWatcher" do
     $reporter_link = $client.request(
       :c => :group,
       :a => :add_reporter,
-      :group_id => $group["group_id"],
-      :reporter_id => $reporter["reporter_id"]
+      :group_id => $group["id"],
+      :reporter_id => $reporter["id"]
     )
     $service = $client.request(
       :c => :service,
@@ -70,7 +75,12 @@ describe "ServiceWatcher" do
       :name => "TestMailSMTPSuccess",
       :plugin => "mail",
       :timeout => 5,
-      :group_id => $group["group_id"],
+      :group_id => $group["id"]
+    )
+    $client.request(
+      :c => :service,
+      :a => :update_options,
+      :service_id => $service["id"],
       :options => {
         "txthost" => "smtp.kaspernj.org",
         "txtport" => 465,
@@ -84,7 +94,12 @@ describe "ServiceWatcher" do
       :name => "TestMailSMTPFail",
       :plugin => "mail",
       :timeout => 5,
-      :group_id => $group["group_id"],
+      :group_id => $group["id"],
+    )
+    $client.request(
+      :c => :service,
+      :a => :update_options,
+      :service_id => $service_fail["id"],
       :options => {
         "txthost" => "asdklajdhadauksdhajkdh",
         "txtport" => 12311,
@@ -94,7 +109,7 @@ describe "ServiceWatcher" do
     )
     
     #Check the service.
-    $client.request(:c => :service, :a => :check, :service_id => $service["service_id"])
+    $client.request(:c => :service, :a => :check, :service_id => $service["id"])
     
     services_list = $client.request(:c => :service, :a => :list)
     raise "Service-list should contain two items." if services_list.length != 2
@@ -107,8 +122,8 @@ describe "ServiceWatcher" do
     end
     
     reporters = $client.request(:c => :reporter, :a => :list)
-    reporters.each do |reporter_name, reporter_data|
-      args = $client.request(:c => :reporter, :a => :args, :reporter_name => reporter_name)
+    reporters.each do |reporter_data|
+      args = $client.request(:c => :reporter, :a => :plugin_args, :plugin_name => reporter_data["plugin"])
     end
   end
   
