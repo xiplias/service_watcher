@@ -77,4 +77,14 @@ class Service_watcher::Model::Service < Knj::Datarow
   def check
     self.plugin_class.check(self.details)
   end
+  
+  def client_data
+    return {
+      :id => id,
+      :name => name,
+      :plugin => self[:plugin],
+      :timeout => self[:timeout],
+      :group_id => self[:group_id]
+    }
+  end
 end

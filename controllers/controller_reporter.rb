@@ -1,6 +1,30 @@
 class Service_watcher::Controllers::Reporter < Service_watcher::Reporter
-  def list
+  def plugins
     return _sw.reporters
+  end
+  
+  def plugins_opts
+    reporters = _sw.reporters
+    
+    ret = {}
+    reporters.each do |name, data|
+      ret[name] = data[:name]
+    end
+    
+    return ret
+  end
+  
+  def plugin_args
+    return Service_watcher::Reporter.const_get(Knj::Php.ucwords(_get["plugin_name"])).paras
+  end
+  
+  def list
+    ret = []
+    _ob.list(:Reporter) do |reporter|
+      ret << reporter.client_data
+    end
+    
+    return ret
   end
   
   def add
@@ -9,14 +33,32 @@ class Service_watcher::Controllers::Reporter < Service_watcher::Reporter
       :plugin => _get["plugin"]
     })
     
-    self.save_options(reporter)
-    
-    return {
-      :reporter_id => reporter.id
-    }
+    return reporter.client_data
   end
   
-  def save_options(reporter)
+  def update
+    reporter = _ob.get(:Reporter, _get["reporter_id"])
+    reporter.update(
+      :name => _get["name"],
+      :plugin => _get["plugin"]
+    )
+    return reporter.client_data
+  end
+  
+  def get
+    reporter = _ob.get(:Reporter, _get["reporter_id"])
+    return reporter.client_data
+  end
+  
+  def delete
+    reporter = _ob.get(:Reporter, _get["reporter_id"])
+    _ob.delete(reporter)
+    return {}
+  end
+  
+  def update_options
+    reporter = _ob.get(:Reporter, _get["reporter_id"])
+    
     if _get["options"].is_a?(Hash)
       found = {}
       _get["options"].each do |key, val|
@@ -47,6 +89,11 @@ class Service_watcher::Controllers::Reporter < Service_watcher::Reporter
       next if found.key?(option[:key])
       _ob.delete(option)
     end
+  end
+  
+  def options
+    reporter = _ob.get(:Reporter, _get["reporter_id"])
+    return reporter.details
   end
   
   def args

@@ -2,10 +2,7 @@ class Service_watcher::Controllers::Service < Service_watcher::Controller
   def list
     list = []
     _ob.list(:Service) do |service|
-      list << {
-        :name => service.name,
-        :plugin => service[:plugin]
-      }
+      list << service.client_data
     end
     
     return list
@@ -18,23 +15,28 @@ class Service_watcher::Controllers::Service < Service_watcher::Controller
       :group_id => _get["group_id"]
     })
     
-    self.save_options(service)
-    
-    return {
-      :service_id => service.id
-    }
+    return service.client_data
+  end
+  
+  def get
+    service = _ob.get(:Service, _get["service_id"])
+    return service.client_data
   end
   
   def update
     service = _ob.get(:Service, _get["service_id"])
     service.update(
       :name => _get["name"],
-      :plugin => _get["plugin"]
+      :plugin => _get["plugin"],
+      :timeout => _get["timeout"],
+      :group_id => _get["group_id"]
     )
-    self.save_options(service)
+    return service.client_data
   end
   
-  def save_options(service)
+  def update_options
+    service = _ob.get(:Service, _get["service_id"])
+    
     if _get["options"].is_a?(Hash)
       found = {}
       _get["options"].each do |key, val|
@@ -65,6 +67,11 @@ class Service_watcher::Controllers::Service < Service_watcher::Controller
       next if found.key?(option[:key])
       _ob.delete(option)
     end
+  end
+  
+  def options
+    service = _ob.get(:Service, _get["service_id"])
+    return service.details
   end
   
   def check

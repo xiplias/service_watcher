@@ -34,10 +34,7 @@ class Service_watcher::Controllers::Group < Service_watcher::Controller
     ret = []
     
     _ob.list(:Group) do |group|
-      ret << {
-        :id => group.id,
-        :name => group.name
-      }
+      ret << group.client_data
     end
     
     return ret
@@ -45,11 +42,7 @@ class Service_watcher::Controllers::Group < Service_watcher::Controller
   
   def get
     group = _ob.get(:Group, _get["group_id"])
-    
-    return {
-      :id => group.id,
-      :name => group.name
-    }
+    return group.client_data
   end
   
   def update
@@ -57,5 +50,23 @@ class Service_watcher::Controllers::Group < Service_watcher::Controller
     group.update(
       :name => _get["name"]
     )
+    return group.client_data
+  end
+  
+  def delete
+    group = _ob.get(:Group, _get["group_id"])
+    _ob.delete(group)
+    return {}
+  end
+  
+  def services
+    group = _ob.get(:Group, _get["group_id"])
+    
+    ret = []
+    group.services.each do |service|
+      ret << service.client_data
+    end
+    
+    return ret
   end
 end

@@ -52,7 +52,15 @@ class Service_watcher::Model::Reporter < Knj::Datarow
     return ob.list(:Group_reporterlink, {"reporter" => self}.merge(args))
   end
   
-  def services
+  def services(args = {})
     return ob.list(:Service_reporterlink, {"reporter" => self}.merge(args))
+  end
+  
+  def client_data
+    return {
+      :id => id,
+      :name => name,
+      :plugin => self[:plugin]
+    }
   end
 end

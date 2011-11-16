@@ -17,14 +17,29 @@ class Service_watcher::Client
       end
       
       classobj.events.connect(:update) do |event, d|
-        _sw.request({:c => self.controller_name, :a => :update, :group_id => d.object.id}.merge(d.data))
+        _sw.request({:c => self.controller_name, :a => :update, "#{self.controller_name}_id" => d.object.id}.merge(d.data))
       end
       
       classobj.events.connect(:data_from_id) do |event, d|
-        data = _sw.request(:c => self.controller_name, :a => :get, :group_id => d.id)
+        data = _sw.request(:c => self.controller_name, :a => :get, "#{self.controller_name}_id" => d.id)
         raise _("No data received?") if !data
         data
       end
+      
+      classobj.events.connect(:delete) do |event, d|
+        _sw.request(:c => self.controller_name, :a => :delete, "#{self.controller_name}_id" => d.object.id)
+      end
+    end
+    
+    def self.list(d)
+      raise "args are not yet supported." if d.args.length > 0
+      
+      ret = []
+      _sw.request(:c => self.controller_name, :a => :list).each do |data|
+        ret << _ob.get(self.class_name, data)
+      end
+      
+      return ret
     end
     
     def url
@@ -99,8 +114,6 @@ class Service_watcher::Client
     end
     
     res = @http.get(url)
-    STDOUT.print "#{res.body}\n\n"
-    
     ret = JSON.parse(res.body)
     
     if ret["type"] == "error"

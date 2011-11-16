@@ -22,4 +22,11 @@ class Service_watcher::Model::Group < Knj::Datarow
     
     super(hash)
   end
+  
+  def client_data
+    return {
+      :id => id,
+      :name => name
+    }
+  end
 end
