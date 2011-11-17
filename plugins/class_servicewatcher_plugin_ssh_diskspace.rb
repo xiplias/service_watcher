@@ -24,6 +24,10 @@ class Service_watcher::Plugin::Ssh_diskspace < Service_watcher::Plugin
 	end
 	
 	def self.check(paras)
+    require "knj/sshrobot"
+    require "knj/php"
+    require "knj/strings"
+    
 		sshrobot = Knj::SSHRobot.new(
 			"host" => paras["txthost"],
 			"port" => paras["txtport"].to_i,
@@ -31,7 +35,7 @@ class Service_watcher::Plugin::Ssh_diskspace < Service_watcher::Plugin
 			"passwd" => paras["txtpasswd"]
 		)
 		
-		if !Php.is_numeric(paras["txtwarnperc"])
+		if !Knj::Php.is_numeric(paras["txtwarnperc"])
 			raise "Warning percent is not numeric - please enter it correctly as number only."
 		end
 		
@@ -40,7 +44,7 @@ class Service_watcher::Plugin::Ssh_diskspace < Service_watcher::Plugin
 		
 		match = output.match(/([0-9]+)%/)
 		
-		if !match or !match[1] or !Php.is_numeric(match[1])
+		if !match or !match[1] or !Knj::Php.is_numeric(match[1])
 			raise _("Error in result from the server.")
 		end
 		
