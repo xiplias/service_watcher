@@ -65,7 +65,10 @@ $schema = {
         {"name" => "id", "type" => "int", "autoincr" => true, "primarykey" => true},
         {"name" => "username", "type" => "varchar"},
         {"name" => "password", "type" => "varchar", "maxlength" => 160}
-      ]
+      ],
+      "on_create_after" => proc{|d|
+        d["db"].insert(:User, {"username" => "admin", "password" => Digest::MD5.hexdigest("admin")})
+      }
     }
   }
 }

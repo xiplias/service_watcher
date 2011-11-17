@@ -22,8 +22,19 @@ class Service_watcher::Plugin::Mysql < Service_watcher::Plugin
 	end
 	
 	def self.check(paras)
+    require "mysql2"
+    
 		begin
-			conn = Mysql.real_connect(paras["txthost"], paras["txtuser"], paras["txtpasswd"], paras["txtdb"], paras["txtport"].to_i)
+      args = {
+        :host => paras["txthost"],
+        :username => paras["txtuser"],
+        :password => paras["txtpasswd"],
+        :port => paras["txtport"].to_i,
+        :symbolize_keys => true
+      }
+      
+      conn = Mysql2::Client.new(args)
+      conn.close
 		rescue => e
 			raise "MySQL connection failed for #{paras["txtuser"]}@#{paras["txthost"]}:#{paras["txtdb"]}! - " + e.inspect
 		end

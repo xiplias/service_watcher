@@ -12,7 +12,8 @@ class Service_watcher::Controllers::Service < Service_watcher::Controller
     service = _ob.add(:Service, {
       :name => _get["name"],
       :plugin => _get["plugin"],
-      :group_id => _get["group_id"]
+      :group_id => _get["group_id"],
+      :timeout => _get["timeout"]
     })
     
     return service.client_data
@@ -32,6 +33,12 @@ class Service_watcher::Controllers::Service < Service_watcher::Controller
       :group_id => _get["group_id"]
     )
     return service.client_data
+  end
+  
+  def delete
+    service = _ob.get(:Service, _get["service_id"])
+    _ob.delete(service)
+    return {}
   end
   
   def update_options

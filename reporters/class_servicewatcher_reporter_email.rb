@@ -2,28 +2,6 @@ class Service_watcher::Reporter::Email < Service_watcher::Reporter
 	def self.paras
 		return [{
       "type" => "text",
-      "name" => "txtsmtphost",
-      "title" => _("SMTP host"),
-      "default" => "localhost"
-    },{
-      "type" => "text",
-      "name" => "txtsmtpport",
-      "title" => _("SMTP port"),
-      "default" => "25"
-    },{
-      "type" => "text",
-      "name" => "txtsmtpuser",
-      "title" => _("SMTP user")
-    },{
-      "type" => "password",
-      "name" => "txtsmtppasswd",
-      "title" => _("SMTP password")
-    },{
-      "type" => "text",
-      "name" => "txtsmtpdomain",
-      "title" => _("SMTP Domain")
-    },{
-      "type" => "text",
       "name" => "txtaddress",
       "title" => _("Email address")
     },{
@@ -34,10 +12,6 @@ class Service_watcher::Reporter::Email < Service_watcher::Reporter
       "type" => "text",
       "name" => "txtsubject",
       "title" => _("Subject")
-    },{
-      "type" => "check",
-      "name" => "chessl",
-      "title" => "SSL"
     }]
 	end
 	
@@ -49,6 +23,10 @@ class Service_watcher::Reporter::Email < Service_watcher::Reporter
 		#print "Report error: " + error_hash["error"].inspect
 		
 		require "knj/web"
+		require "knj/php"
+		require "knj/datet"
+		require "knj/errors"
+		
 		details = error_hash["reporter"].details
 		
 		html = "<h1>" + _("An error occurred") + "</h1><br />\n"
@@ -67,34 +45,17 @@ class Service_watcher::Reporter::Email < Service_watcher::Reporter
 		html += "</tr><tr>"
 		html += "<td colspan=\"2\"><b>#{_("Error")}</b></td>"
 		html += "</tr><tr>"
-		html += "<td colspan=\"2\" style=\"margin-left: 9px;\">#{Knj::Php.nl2br(error_hash["error"].inspect.to_s.html)}</td>"
+		html += "<td colspan=\"2\" style=\"margin-left: 9px;\">#{Knj::Php.nl2br(Knj::Errors.error_str(error_hash["error"]).to_s.html)}</td>"
 		html += "</tr></table>"
-		html += "<td colspan=\"2\"><b>#{_("Traceback")}</b></td>"
-		html += "<td colspan=\"2\" style=\"margin-left: 9px;\"></td>"
 		
-		if details["chessl"] == "1"
-			ssl = true
-		else
-			ssl = false
-		end
-		
-		args = {
-      "from" => details["txtfromaddress"],
-      "subject" => Service_watcher.parse_subject(
+		_kas.mail(
+      :to => details["txtaddress"],
+      :from => details["txtfromaddress"],
+      :subject => Service_watcher.parse_subject(
         "error" => error_hash["error"],
         "subject" => details["txtsubject"]
       ),
-      "to" => details["txtaddress"],
-      "html" => html,
-      "ssl" => ssl,
-      "smtp_host" => details["txtsmtphost"],
-      "smtp_port" => details["txtsmtpport"].to_i,
-      "smtp_user" => details["txtsmtpuser"],
-      "smtp_passwd" => details["txtsmtppasswd"],
-      "smtp_domain" => details["txtsmtpdomain"],
-      "send" => true
-		}
-		
-    Knj::Mailobj.new(args)
+      :html => html
+		)
 	end
 end

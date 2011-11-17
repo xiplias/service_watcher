@@ -32,10 +32,8 @@ class Service_watcher::Client
     end
     
     def self.list(d)
-      raise "args are not yet supported." if d.args.length > 0
-      
       ret = []
-      _sw.request(:c => self.controller_name, :a => :list).each do |data|
+      _sw.request(:c => self.controller_name, :a => :list, :args => d.args).each do |data|
         ret << _ob.get(self.class_name, data)
       end
       
@@ -44,6 +42,10 @@ class Service_watcher::Client
     
     def url
       return "/?s=#{self.class.controller_name}_view&#{self.class.controller_name}_id=#{self.id}"
+    end
+    
+    def url_edit
+      return "/?s=#{self.class.controller_name}_edit&#{self.class.controller_name}_id=#{self.id}"
     end
     
     def html
@@ -64,34 +66,51 @@ class Service_watcher::Client
     )
   end
   
-  #Logs in with username and password on the server.
+  #Logs in with username and password on the server. ':password'-argument should be MD5-hashed from the plain value.
   def login(args)
-    return self.request(:c => :user, :a => :login, :username => args[:username], :password => Digest::MD5.hexdigest(args[:password]))
+    return self.request(:c => :user, :a => :login, :username => args[:username], :password => args[:password])
   end
   
   #Used to recursively convert hash- and array-arguments to a valid Knjappserver-URL-arguments-string. No need to call this manually - it is used from the request-method.
-  def args_rec(orig_key, obj)
+  def args_rec(orig_key, obj, first)
     url = ""
+    first_ele = true
     
     if obj.is_a?(Array)
+      ele_count = 0
+      
       obj.each do |val|
-        url += "&"
+        orig_key_str = "#{orig_key}[#{ele_count}]"
+        val = "#<Model::#{val.table}::#{val.id}>" if val.is_a?(Service_watcher::Client::Model)
         
         if val.is_a?(Hash) or val.is_a?(Array)
-          url += self.args_rec("#{orig_key}[]", val)
+          url += self.args_rec(orig_key_str, val, false)
         else
-          url += "#{Knj::Web.urlenc("#{orig_key}[]")}=#{Knj::Web.urlenc(val)}"
+          url += "&" if !first or !first_ele
+          url += "#{orig_key_str}=#{Knj::Web.urlenc(val)}"
         end
+        
+        first_ele = false if first_ele
+        ele_count += 1
       end
     elsif obj.is_a?(Hash)
       obj.each do |key, val|
-        url += "&"
+        if first
+          orig_key_str = key
+        else
+          orig_key_str = "#{orig_key}[#{key}]"
+        end
+        
+        val = "#<Model::#{val.table}::#{val.id}>" if val.is_a?(Service_watcher::Client::Model)
         
         if val.is_a?(Hash) or val.is_a?(Array)
-          url += self.args_rec("#{orig_key}[#{key}]", val)
+          url += self.args_rec(orig_key_str, val, false)
         else
-          url += "#{Knj::Web.urlenc("#{orig_key}[#{key}]")}=#{Knj::Web.urlenc(val)}"
+          url += "&" if !first or !first_ele
+          url += "#{Knj::Web.urlenc(orig_key_str)}=#{Knj::Web.urlenc(val)}"
         end
+        
+        first_ele = false if first_ele
       end
     else
       raise "Unknown class: '#{obj.class.name}'."
@@ -102,23 +121,29 @@ class Service_watcher::Client
   
   #Sends request to server and return the data. If an error occurred on the server that error will be thrown as if the error occurred on the client.
   def request(args)
-    url = "?"
-    args.each do |key, val|
-      url += "&" if url != "?"
-      
-      if val.is_a?(Hash) or val.is_a?(Array)
-        url += self.args_rec(key, val)
-      else
-        url += "#{Knj::Web.urlenc(key)}=#{Knj::Web.urlenc(val)}"
-      end
-    end
+    url = "?#{self.args_rec("", args, true)}"
     
-    res = @http.get(url)
-    ret = JSON.parse(res.body)
+    res = @http.get("index.rhtml#{url}")
+    raise Knj::Errors::InvalidData, _("Server returned an empty response. An error probaly occurred on the server.") if res.body.strip.length <= 0
+    
+    begin
+      ret = JSON.parse(res.body)
+    rescue JSON::ParserError => e
+      _kas.dprint "Could parse JSON from:\n\n#{res.body}\n\n"
+      raise e
+    end
     
     if ret["type"] == "error"
       begin
-        raise Knj::Strings.const_get_full(ret["error_type"]), ret["error_msg"]
+        require "knj/autoload"
+        
+        begin
+          const = Knj::Strings.const_get_full(ret["error_type"])
+        rescue NameError
+          raise ret["error_msg"]
+        end
+        
+        raise const, ret["error_msg"]
       rescue Exception => e
         #Add the backtrace from the server so it is easier to debug.
         e.set_backtrace(ret["error_backtrace"] | e.backtrace)

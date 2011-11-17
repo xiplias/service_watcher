@@ -20,8 +20,13 @@ class Service_watcher
     require "#{@args[:knjappserver_path]}knjappserver"
     require "#{@args[:knjrbfw_path]}knjrbfw"
     require "#{@args[:knjdbrevision_path]}knjdbrevision"
-    require "knj/autoload"
     require "knj/strings"
+    require "knj/db"
+    require "knj/php"
+    require "knj/objects"
+    require "knj/datarow"
+    require "knj/autoload/json_autoload"
+    require "net/http"
     
     @plugins = {}
     
@@ -136,6 +141,8 @@ class Service_watcher
   end
   
   def service_checker
+    @appserver.thread_init
+    
     loop do
       Thread.current[:running] = true
       @ob.list(:Service) do |service|
@@ -184,6 +191,7 @@ class Service_watcher
     begin
       if staticmethod
         classob.check(args["service"].details)
+        @appserver.log("Service was successfully checked.", args["service"])
       else
         args["plugin"].check
       end
@@ -192,8 +200,32 @@ class Service_watcher
         "errorstatus" => false
       }
     rescue Exception => e
-      args["service"].reporters_merged.each do |reporter|
-        reporter.reporter_plugin.report_error("reporter" => reporter, "error" => e, "pluginname" => args["pluginname"], "plugin" => args["plugin"], "service" => args["service"])
+      if args["service"]
+        @appserver.log("Service threw error as it was checked.", args["service"], {
+          :comment => JSON.generate(
+            :error_str => Knj::Errors.error_str(e)
+          )
+        })
+        
+        args["service"].reporters_merged.each do |reporter|
+          begin
+            reporter.reporter_plugin.report_error("reporter" => reporter, "error" => e, "pluginname" => args["pluginname"], "plugin" => args["plugin"], "service" => args["service"])
+            @appserver.dprint "Reported error: #{Knj::Errors.error_str(e)}\n\n"
+            @appserver.log("Reported an error for service '#{args["service"].name} (#{args["service"].id})' with success.", reporter, {
+              :comment => JSON.generate(
+                :error_str => Knj::Errors.error_str(e)
+              )
+            })
+          rescue => reporter_e
+            @appserver.dprint "Error occurred when running reporter: #{Knj::Errors.error_str(reporter_e)}\n\n"
+            @appserver.log("Reporter threw an error as it tried to report for service '#{args["service"].name} (#{args["service"].id})': '#{reporter_e.message}'.", reporter, {
+              :comment => JSON.generate(
+                :error_str => Knj::Errors.error_str(e),
+                :reporter_error_str => Knj::Errors.error_str(reporter_e)
+              )
+            })
+          end
+        end
       end
       
       return {
@@ -206,6 +238,14 @@ class Service_watcher
   def self.parse_subject(args)
     subject = args["subject"].gsub("%subject%", args["error"].inspect.to_s)
     return subject
+  end
+  
+  def self.parse_subject_info_args
+    return [{
+      :title => "%subject%",
+      :type => :info,
+      :value => _("Will we replaced with the error inspection of the error.")
+    }]
   end
   
   #Stops the service-watcher gracefully. Stops the knjappserver and lets the checker-thread finish before killing it.
@@ -221,5 +261,38 @@ class Service_watcher
   
   def join
     @appserver.join
+  end
+  
+  def load_request
+    self.parse_args(_get)
+  end
+  
+  #Parses key-numeric-hashes into arrays and converts special model-strings into actual models.
+  def parse_args(arg)
+    if arg.is_a?(Hash) and Knj::ArrayExt.hash_numeric_keys?(arg)
+      arr = []
+      
+      arg.each do |key, val|
+        arr << val
+      end
+      
+      return self.parse_args(arr)
+    elsif arg.is_a?(Hash)
+      arg.each do |key, val|
+        arg[key] = self.parse_args(val)
+      end
+      
+      return arg
+    elsif arg.is_a?(Array)
+      arg.each_index do |key|
+        arg[key] = self.parse_args(arg[key])
+      end
+      
+      return arg
+    elsif arg.is_a?(String) and match = arg.match(/^#<Model::(.+?)::(\d+)>$/)
+      return @ob.get(match[1], match[2])
+    else
+      return arg
+    end
   end
 end

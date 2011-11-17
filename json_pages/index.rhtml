@@ -1,7 +1,13 @@
 <%
   begin
+    _sw.load_request
+    
     raise "No controller given by URL c-variable." if !_get["c"]
     raise "No action given by URL a-variable." if !_get["a"]
+    
+    if _get["c"] != "user" and _session[:user_id].to_i <= 0
+      raise sprintf(_("You are not logged in and cannot use the controller: '%s'."), _get["c"])
+    end
     
     controller = _sw.controllers[_get["c"]]
     raise sprintf(_("No controller found by that name: '%s'."), _get["c"]) if !controller

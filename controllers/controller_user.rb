@@ -6,6 +6,7 @@ class Service_watcher::Controllers::User < Service_watcher::Controller
     })
     
     raise _("A user with that username and/or password could not be found.") if !user
+    _session[:user_id] = user.id
     
     return {
       :user_id => user.id
