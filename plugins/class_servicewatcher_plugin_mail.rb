@@ -24,19 +24,22 @@ class Service_watcher::Plugin::Mail < Service_watcher::Plugin
 	end
 	
 	def self.check(paras)
-		if paras["chessl"] == "1"
+		if paras["chessl"] == "1" or paras["chessl"] == "on"
 			sslval = true
 		else
 			sslval = false
 		end
 		
-		if paras["seltype"] == "IMAP"
+		if paras["seltype"] == "IMAP" or paras["seltype"] == "1"
+      require "net/imap"
 			conn = Net::IMAP.new(paras["txthost"], paras["txtport"].to_i, sslval)
 			conn.login(paras["txtuser"], paras["txtpass"]) if paras["txtuser"].to_s.length > 0 and paras["txtpass"].to_s.length > 0
-		elsif paras["seltype"] == "POP"
+		elsif paras["seltype"] == "POP" or paras["seltype"] == "0"
+      require "net/pop"
 			conn = Net::POP.new(paras["txthost"], paras["txtport"].to_i, sslval)
 			conn.start(paras["txtuser"], paras["txtpass"]) if paras["txtuser"].to_s.length > 0 and paras["txtpass"].to_s.length > 0
-		elsif paras["seltype"] == "SMTP"
+		elsif paras["seltype"] == "SMTP" or paras["seltype"] == "2"
+      require "net/smtp"
 			conn = Net::SMTP.new(paras["txthost"], paras["txtport"].to_i)
       conn.enable_ssl if sslval
 			
