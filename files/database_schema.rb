@@ -43,7 +43,8 @@ $schema = {
         {"name" => "plugin", "type" => "varchar"},
         {"name" => "timeout", "type" => "int"},
         {"name" => "date_lastrun", "type" => "datetime"},
-        {"name" => "group_id", "type" => "int"}
+        {"name" => "group_id", "type" => "int"},
+        {"name" => "failed", "type" => "enum", "maxlength" => "'0','1'", "default" => 0}
       ],
       "indexes" => [
         {"name" => "group_id", "columns" => ["group_id"]}

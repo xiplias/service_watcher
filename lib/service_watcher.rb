@@ -147,14 +147,13 @@ class Service_watcher
       Thread.current[:running] = true
       @ob.list(:Service) do |service|
         run = false
-        cur_time = Time.new.to_i
         service_date = service.date_lastrun
         
         if !service_date
           run = true
         else
           service_time = service_date.time.to_i
-          if (service_time + service[:timeout].to_i) < cur_time
+          if (service_time + service[:timeout].to_i) < Time.now.to_i
             run = true
           end
         end
@@ -192,6 +191,11 @@ class Service_watcher
       if staticmethod
         classob.check(args["service"].details)
         @appserver.log("Service was successfully checked.", args["service"])
+        
+        if args["service"].failed?
+          args["service"][:failed] = 0
+          @appserver.log("Fail-marking removed.", args["service"])
+        end
       else
         args["plugin"].check
       end
@@ -201,29 +205,39 @@ class Service_watcher
       }
     rescue Exception => e
       if args["service"]
+        failed = args["service"].failed?
+        
+        if !args["service"].failed?
+          args["service"][:failed] = 1
+          @appserver.log("Fail-marking set.", args["service"])
+        end
+        
         @appserver.log("Service threw error as it was checked.", args["service"], {
           :comment => JSON.generate(
             :error_str => Knj::Errors.error_str(e)
           )
         })
         
-        args["service"].reporters_merged.each do |reporter|
-          begin
-            reporter.reporter_plugin.report_error("reporter" => reporter, "error" => e, "pluginname" => args["pluginname"], "plugin" => args["plugin"], "service" => args["service"])
-            @appserver.dprint "Reported error: #{Knj::Errors.error_str(e)}\n\n"
-            @appserver.log("Reported an error for service '#{args["service"].name} (#{args["service"].id})' with success.", reporter, {
-              :comment => JSON.generate(
-                :error_str => Knj::Errors.error_str(e)
-              )
-            })
-          rescue => reporter_e
-            @appserver.dprint "Error occurred when running reporter: #{Knj::Errors.error_str(reporter_e)}\n\n"
-            @appserver.log("Reporter threw an error as it tried to report for service '#{args["service"].name} (#{args["service"].id})': '#{reporter_e.message}'.", reporter, {
-              :comment => JSON.generate(
-                :error_str => Knj::Errors.error_str(e),
-                :reporter_error_str => Knj::Errors.error_str(reporter_e)
-              )
-            })
+        #Only send reports if the service was already marked as failed.
+        if !failed
+          args["service"].reporters_merged.each do |reporter|
+            begin
+              reporter.reporter_plugin.report_error("reporter" => reporter, "error" => e, "pluginname" => args["pluginname"], "plugin" => args["plugin"], "service" => args["service"])
+              @appserver.dprint "Reported error: #{Knj::Errors.error_str(e)}\n\n"
+              @appserver.log("Reported an error for service '#{args["service"].name} (#{args["service"].id})' with success.", reporter, {
+                :comment => JSON.generate(
+                  :error_str => Knj::Errors.error_str(e)
+                )
+              })
+            rescue => reporter_e
+              @appserver.dprint "Error occurred when running reporter: #{Knj::Errors.error_str(reporter_e)}\n\n"
+              @appserver.log("Reporter threw an error as it tried to report for service '#{args["service"].name} (#{args["service"].id})': '#{reporter_e.message}'.", reporter, {
+                :comment => JSON.generate(
+                  :error_str => Knj::Errors.error_str(e),
+                  :reporter_error_str => Knj::Errors.error_str(reporter_e)
+                )
+              })
+            end
           end
         end
       end

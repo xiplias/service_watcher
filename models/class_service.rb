@@ -84,7 +84,8 @@ class Service_watcher::Model::Service < Knj::Datarow
       :name => name,
       :plugin => self[:plugin],
       :timeout => self[:timeout],
-      :group_id => self[:group_id]
+      :group_id => self[:group_id],
+      :failed => self[:failed]
     }
   end
 end
