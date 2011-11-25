@@ -127,7 +127,7 @@ class Service_watcher::Client
     raise Knj::Errors::InvalidData, _("Server returned an empty response. An error probaly occurred on the server.") if res.body.strip.length <= 0
     
     begin
-      ret = JSON.parse(res.body)
+      ret = JSON.parse(Knj::Php.gzuncompress(res.body))
     rescue JSON::ParserError => e
       _kas.dprint "Could parse JSON from:\n\n#{res.body}\n\n"
       raise e

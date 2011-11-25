@@ -15,18 +15,18 @@
     raise sprintf(_("No such action on controller: '%s'."), _get["a"]) if !controller.respond_to?(_get["a"])
     res = controller.send(_get["a"])
     
-    print JSON.generate(
+    print Knj::Php.gzcompress(JSON.generate(
       :type => :response,
       :data => res
-    )
+    ))
   rescue Exception => e
     STDOUT.print Knj::Errors.error_str(e) + "\n\n"
     
-    print JSON.generate(
+    print Knj::Php.gzcompress(JSON.generate(
       :type => :error,
       :error_msg => e.message,
       :error_type => e.class.name,
       :error_backtrace => e.backtrace
-    )
+    ))
   end
 %>
