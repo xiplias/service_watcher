@@ -33,7 +33,7 @@ class Service_watcher::Controllers::Group < Service_watcher::Controller
   def list
     ret = []
     
-    _ob.list(:Group) do |group|
+    _ob.list(:Group, _get["args"]) do |group|
       ret << group.client_data
     end
     
@@ -63,7 +63,7 @@ class Service_watcher::Controllers::Group < Service_watcher::Controller
     group = _ob.get(:Group, _get["group_id"])
     
     ret = []
-    group.services.each do |service|
+    group.services(_get["args"]).each do |service|
       ret << service.client_data
     end
     
