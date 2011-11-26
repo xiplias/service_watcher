@@ -1,7 +1,5 @@
 class Service_watcher::Controllers::Service < Service_watcher::Controller
   def list
-    _kas.dprint(_get)
-    
     list = []
     _ob.list(:Service, _get["args"]) do |service|
       list << service.client_data
