@@ -25,7 +25,9 @@ class Service_watcher
     require "knj/php"
     require "knj/objects"
     require "knj/datarow"
-    require "knj/autoload/json_autoload"
+    
+    require "rubygems"
+    require "json"
     require "net/http"
     
     @plugins = {}

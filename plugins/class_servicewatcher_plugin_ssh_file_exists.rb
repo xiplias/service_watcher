@@ -34,15 +34,21 @@ class Service_watcher::Plugin::Ssh_file_exists < Service_watcher::Plugin
   def self.check(paras)
     require "knj/sshrobot"
     require "knj/cmd_parser"
+    require "knj/retry"
+    require "knj/datet"
+    require "knj/strings"
     
     sshrobot = nil
-    Timeout.timeout(10) do
+    output = nil
+    Knj::Retry.try(:tries => 3, :wait => 2, :errors => [Errno::ETIMEDOUT, Errno::EHOSTUNREACH]) do
       sshrobot = Knj::SSHRobot.new(
         "host" => paras["txthost"],
         "port" => paras["txtport"].to_i,
         "user" => paras["txtuser"],
-        "passwd" => paras["txtpasswd"]
+        "passwd" => paras["txtpasswd"],
       )
+      output = sshrobot.exec("ls -lh #{Knj::Strings::UnixSafe(paras["txtpath"])}")
+      sshrobot.close
     end
     
     date = Knj::Datet.new
@@ -57,7 +63,7 @@ class Service_watcher::Plugin::Ssh_file_exists < Service_watcher::Plugin
     regex_obj = Regexp.compile(regex)
     
     match = nil
-    output = sshrobot.exec("ls -lh #{Knj::Strings::UnixSafe(paras["txtpath"])}")
+    
     entries = Knj::Cmd_parser.lsl(output)
     entries.each do |entry|
       if match = entry[:file].to_s.match(regex_obj)

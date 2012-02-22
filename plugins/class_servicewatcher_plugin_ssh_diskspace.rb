@@ -27,24 +27,30 @@ class Service_watcher::Plugin::Ssh_diskspace < Service_watcher::Plugin
     require "knj/sshrobot"
     require "knj/php"
     require "knj/strings"
+    require "knj/retry"
+    require "knj/strings"
     
-		sshrobot = Knj::SSHRobot.new(
-			"host" => paras["txthost"],
-			"port" => paras["txtport"].to_i,
-			"user" => paras["txtuser"],
-			"passwd" => paras["txtpasswd"]
-		)
-		
-		if !Knj::Php.is_numeric(paras["txtwarnperc"])
-			raise "Warning percent is not numeric - please enter it correctly as number only."
-		end
-		
-		warnperc = paras["txtwarnperc"].to_i
-		output = sshrobot.exec("df -m -P #{Knj::Strings::UnixSafe(paras["txtpath"])}")
-		
-		if output.index("invalid option -- P") != nil
-      output = sshrobot.exec("df -m #{Knj::Strings::UnixSafe(paras["txtpath"])}")
-		end
+    output = nil
+    Knj::Retry.try(:tries => 3, :timeout => 15, :wait => 2, :errors => [Errno::ETIMEDOUT, Errno::EHOSTUNREACH]) do
+      sshrobot = Knj::SSHRobot.new(
+        "host" => paras["txthost"],
+        "port" => paras["txtport"].to_i,
+        "user" => paras["txtuser"],
+        "passwd" => paras["txtpasswd"]
+      )
+      
+      if !Knj::Php.is_numeric(paras["txtwarnperc"])
+        raise _("Warning percent is not numeric - please enter it correctly as number only.")
+      end
+      
+      output = sshrobot.exec("df -m -P #{Knj::Strings.unixsafe(paras["txtpath"])}")
+      
+      if output.index("invalid option -- P") != nil
+        output = sshrobot.exec("df -m #{Knj::Strings.unixsafe(paras["txtpath"])}")
+      end
+      
+      sshrobot.close
+    end
 		
 		match = output.match(/([0-9]+)%/)
 		
@@ -52,10 +58,9 @@ class Service_watcher::Plugin::Ssh_diskspace < Service_watcher::Plugin
 			raise _("Error in result from the server.") + "\n\nMatch:\n#{Knj::Php.print_r(match, true)}\n\nResult:\n#{output}"
 		end
 		
+		warnperc = paras["txtwarnperc"].to_i
 		if match[1].to_i > warnperc
 			raise "Diskspace percent is " + match[1] + " - warning percent is " + warnperc.to_s + "."
 		end
-		
-		sshrobot.close
 	end
 end

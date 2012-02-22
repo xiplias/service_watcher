@@ -57,7 +57,7 @@ class Service_watcher::Client
   def initialize(args)
     require "knj/http2"
     require "knj/strings"
-    require "knj/autoload/json_autoload"
+    require "json/pure"
     
     @http = Knj::Http2.new(
       :host => args[:host],
@@ -130,6 +130,11 @@ class Service_watcher::Client
       ret = JSON.parse(Knj::Php.gzuncompress(res.body))
     rescue JSON::ParserError => e
       _kas.dprint "Could parse JSON from:\n\n#{res.body}\n\n"
+      raise e
+    rescue => e
+      #_kas.dprint "Error when parsing content from server."
+      #_kas.dprint res.headers
+      #_kas.dprint res.body
       raise e
     end
     

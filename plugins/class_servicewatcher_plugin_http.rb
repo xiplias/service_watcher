@@ -17,6 +17,9 @@ class Service_watcher::Plugin::Http < Service_watcher::Plugin
 			"title" => _("Timeout"),
 			"name" => "txttimeout",
 			"default" => 7
+    },{
+      "title" => _("HTML regex match"),
+      "name" => "txthtmlregexmatch"
 		}]
 	end
 	
@@ -26,16 +29,24 @@ class Service_watcher::Plugin::Http < Service_watcher::Plugin
 		
 		require "net/http"
 		require "net/https"
+		require "knj/retry"
 		
-		http = Net::HTTP.new(paras["txthost"], paras["txtport"])
-		http.read_timeout = paras["txttimeout"].to_i
-		
-		if paras["chessl"] == "1" or paras["chessl"] == "on"
-			require "net/https"
-			http.use_ssl = true
-			http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+		Knj::Retry.try(:tries => 3, :wait => 2, :errors => [SocketError]) do
+      http = Net::HTTP.new(paras["txthost"], paras["txtport"])
+      http.read_timeout = paras["txttimeout"].to_i
+      
+      if paras["chessl"] == "1" or paras["chessl"] == "on"
+        require "net/https"
+        http.use_ssl = true
+        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      end
+      
+      resp, data = http.get2("/#{paras["txtaddr"]}")
+      
+      if paras["txthtmlregexmatch"].to_s.length > 0
+        regex = Knj::Strings.regex(paras["txthtmlregexmatch"])
+        raise sprintf(_("Could not match the following regex: '%1$s'."), paras["txthtmlregexmatch"]) if !regex.match(data)
+      end
 		end
-		
-		resp, data = http.get2("/#{paras["txtaddr"]}")
 	end
 end

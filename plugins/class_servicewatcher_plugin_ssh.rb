@@ -29,7 +29,9 @@ class Service_watcher::Plugin::Ssh < Service_watcher::Plugin
 				"port" => paras["txtport"],
 				"user" => paras["txtuser"],
 				"passwd" => paras["txtpasswd"]
-			).session
+			)
+			sshrobot.session
+			sshrobot.close
 		rescue => e
 			raise "SSH connection failed for #{paras["txtuser"]}@#{paras["txthost"]}:#{paras["txtport"]}!"
 		end
