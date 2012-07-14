@@ -19,7 +19,6 @@ class Service_watcher
     
     require "#{@args[:knjappserver_path]}knjappserver"
     require "#{@args[:knjrbfw_path]}knjrbfw"
-    require "#{@args[:knjdbrevision_path]}knjdbrevision"
     require "knj/strings"
     require "knj/db"
     require "knj/php"
@@ -79,8 +78,8 @@ class Service_watcher
     raise "'#{dbschemapath}' did not exist." if !File.exists?(dbschemapath)
     require dbschemapath
     raise "No schema-variable was spawned." if !$schema
-    dbrev = Knjdbrevision.new
-    dbrev.init_db($schema, @db)
+    dbrev = Knj::Db::Revision.new
+    dbrev.init_db("schema" => $schema, "db" => @db)
     
     
     #Spawn objects-handler.
