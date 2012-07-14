@@ -51,7 +51,7 @@ class Service_watcher::Plugin::Ssh_file_exists < Service_watcher::Plugin
       sshrobot.close
     end
     
-    date = Knj::Datet.new
+    date = Datet.new
     yday = date.days - 1
     
     regex = paras["txtfnregex"]

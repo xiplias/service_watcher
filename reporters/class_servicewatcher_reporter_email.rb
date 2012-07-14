@@ -41,7 +41,7 @@ class Service_watcher::Reporter::Email < Service_watcher::Reporter
 		html += "<td>#{error_hash["error"].class.to_s.html}</td>"
 		html += "</tr><tr>"
 		html += "<td><b>#{_("Date")}</b></td>"
-		html += "<td>#{Knj::Datet.new.out.html}</td>"
+		html += "<td>#{Datet.new.out.html}</td>"
 		html += "</tr><tr>"
 		html += "<td colspan=\"2\"><b>#{_("Error")}</b></td>"
 		html += "</tr><tr>"

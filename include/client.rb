@@ -59,7 +59,7 @@ class Service_watcher::Client
     require "knj/strings"
     require "json/pure"
     
-    @http = Knj::Http2.new(
+    @http = Http2.new(
       :host => args[:host],
       :port => args[:port],
       :ssl => args[:ssl]
@@ -123,8 +123,8 @@ class Service_watcher::Client
   def request(args)
     url = "?#{self.args_rec("", args, true)}"
     
-    res = @http.get("index.rhtml#{url}")
-    raise Knj::Errors::InvalidData, _("Server returned an empty response. An error probaly occurred on the server.") if res.body.strip.length <= 0
+    res = @http.get(:url => "index.rhtml#{url}")
+    raise ArgumentError, _("Server returned an empty response. An error probaly occurred on the server.") if res.body.strip.length <= 0
     
     begin
       ret = JSON.parse(Knj::Php.gzuncompress(res.body))
