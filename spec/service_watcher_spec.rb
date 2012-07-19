@@ -8,7 +8,6 @@ describe "ServiceWatcher" do
     require "knjappserver"
     require "mail"
     require "knjrbfw"
-    require "knj/autoload"
     
     #require "/home/kaspernj/Dev/Ruby/knjrbfw/lib/knjrbfw.rb"
     #$:.delete("/home/kaspernj/.rvm/gems/ruby-1.9.2-head/gems/knjrbfw-0.0.8/lib")
