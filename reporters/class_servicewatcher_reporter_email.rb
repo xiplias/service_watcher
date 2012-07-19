@@ -24,7 +24,7 @@ class Service_watcher::Reporter::Email < Service_watcher::Reporter
 		
 		require "knj/web"
 		require "knj/php"
-		require "knj/datet"
+		require "datet"
 		require "knj/errors"
 		
 		details = error_hash["reporter"].details
