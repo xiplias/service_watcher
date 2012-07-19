@@ -100,7 +100,9 @@ class Service_watcher
       next if !match
       
       require "#{controllers_path}/#{controller_file}"
-      @controllers[match[1].downcase] = Service_watcher::Controllers.const_get(Knj::Php.ucwords(match[1])).new(:sw => self)
+      class_obj = Service_watcher::Controllers.const_get(Knj::Php.ucwords(match[1]))
+      raise "Not a controller: '#{class_obj}' (superclass: #{class_obj.superclass.name})." if class_obj.superclass.name != "Service_watcher::Controller"
+      @controllers[match[1].downcase] = class_obj.new(:sw => self)
     end
     
     
@@ -133,9 +135,7 @@ class Service_watcher
     
     
     #Start main thread that runs service-checks automatically based on timeouts.
-    @thread = Knj::Thread.new do
-      self.service_checker
-    end
+    @thread = Knj::Thread.new(&self.method(:service_checker))
     
     #Start the appserver.
     @appserver.start
@@ -204,6 +204,8 @@ class Service_watcher
       return {
         "errorstatus" => false
       }
+    rescue SystemExit, Interrupt
+      raise
     rescue Exception => e
       if args["service"]
         failed = args["service"].failed?

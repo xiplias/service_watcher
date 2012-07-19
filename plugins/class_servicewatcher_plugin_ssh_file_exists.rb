@@ -35,7 +35,7 @@ class Service_watcher::Plugin::Ssh_file_exists < Service_watcher::Plugin
     require "knj/sshrobot"
     require "knj/cmd_parser"
     require "knj/retry"
-    require "knj/datet"
+    require "datet"
     require "knj/strings"
     
     sshrobot = nil
@@ -57,8 +57,8 @@ class Service_watcher::Plugin::Ssh_file_exists < Service_watcher::Plugin
     regex = paras["txtfnregex"]
     regex.gsub!("%Y", date.year.to_s)
     regex.gsub!("%m", "%02d" % date.month)
-    regex.gsub!("%d", "%02d" % date.date)
-    regex.gsub!("%yday", "%02d" % yday.date)
+    regex.gsub!("%d", "%02d" % date.day)
+    regex.gsub!("%yday", "%02d" % yday.day)
     
     regex_obj = Regexp.compile(regex)
     

@@ -1,4 +1,4 @@
-class Service_watcher::Controllers::Reporter < Service_watcher::Reporter
+class Service_watcher::Controllers::Reporter < Service_watcher::Controller
   def plugins
     return _sw.reporters
   end

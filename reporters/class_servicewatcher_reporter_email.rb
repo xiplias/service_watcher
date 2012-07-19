@@ -22,9 +22,9 @@ class Service_watcher::Reporter::Email < Service_watcher::Reporter
 	def report_error(error_hash)
 		#print "Report error: " + error_hash["error"].inspect
 		
+		require "datet"
 		require "knj/web"
 		require "knj/php"
-		require "knj/datet"
 		require "knj/errors"
 		
 		details = error_hash["reporter"].details

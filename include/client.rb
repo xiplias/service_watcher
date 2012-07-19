@@ -1,5 +1,3 @@
-require "knj/datarow_custom"
-
 class Service_watcher::Client
   class Model < Knj::Datarow_custom
     def self.controller_name
@@ -55,8 +53,6 @@ class Service_watcher::Client
   
   #Initializes the HTTP-connection to the server with the given arguments.
   def initialize(args)
-    require "knj/http2"
-    require "knj/strings"
     require "json/pure"
     
     @http = Http2.new(
@@ -140,8 +136,6 @@ class Service_watcher::Client
     
     if ret["type"] == "error"
       begin
-        require "knj/autoload"
-        
         begin
           const = Knj::Strings.const_get_full(ret["error_type"])
         rescue NameError

@@ -1,4 +1,4 @@
-class Service_watcher::Controllers::Log < Service_watcher::Reporter
+class Service_watcher::Controllers::Log < Service_watcher::Controller
   def list
     logs = _kas.ob.list(:Log, _get["args"])
     
