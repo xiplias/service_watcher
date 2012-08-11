@@ -4,10 +4,10 @@ describe "ServiceWatcher" do
   it "should require all its requirements" do
     require "rubygems"
     require "service_watcher"
-    require "knjdbrevision"
     require "knjappserver"
     require "mail"
     require "knjrbfw"
+    require "sqlite3"
     
     #require "/home/kaspernj/Dev/Ruby/knjrbfw/lib/knjrbfw.rb"
     #$:.delete("/home/kaspernj/.rvm/gems/ruby-1.9.2-head/gems/knjrbfw-0.0.8/lib")
@@ -16,7 +16,7 @@ describe "ServiceWatcher" do
   end
   
   it "should start a webserver for JSON access" do
-    dbpath = "#{File.dirname(__FILE__)}/../files/database.sqlite3"
+    dbpath = "#{Knj::Os.tmpdir}/service_watcher_spec_database.sqlite3"
     File.unlink(dbpath) if File.exists?(dbpath)
     
     @db_sample = Knj::Db.new(
@@ -30,7 +30,7 @@ describe "ServiceWatcher" do
       :port => 1515,
       :db => @db_sample,
       :knjappserver_args => {
-        :knjrbfw_path => "/home/kaspernj/Dev/Ruby/knjrbfw/lib/"
+        #:knjrbfw_path => "/home/kaspernj/Dev/Ruby/knjrbfw/lib/"
       }
     )
     
@@ -43,7 +43,7 @@ describe "ServiceWatcher" do
       :host => "localhost",
       :port => 1515
     )
-    $client.login(:username => "Testuser", :password => "123")
+    $client.login(:username => "admin", :password => Digest::MD5.hexdigest("admin"))
     
     $reporter = $client.request(
       :c => :reporter,
@@ -127,8 +127,6 @@ describe "ServiceWatcher" do
   end
   
   it "should run the added service automatically and set date-lastrun on it." do
-    service = $sw.ob.get_by(:Service)
-    
     Timeout.timeout(2) do
       loop do
         all_ran = true

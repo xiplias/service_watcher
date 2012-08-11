@@ -24,12 +24,6 @@ class Service_watcher::Plugin::Ssh_diskspace < Service_watcher::Plugin
 	end
 	
 	def self.check(paras)
-    require "knj/sshrobot"
-    require "knj/php"
-    require "knj/strings"
-    require "knj/retry"
-    require "knj/strings"
-    
     output = nil
     Knj::Retry.try(:tries => 3, :timeout => 15, :wait => 2, :errors => [Errno::ETIMEDOUT, Errno::EHOSTUNREACH]) do
       sshrobot = Knj::SSHRobot.new(
@@ -39,7 +33,7 @@ class Service_watcher::Plugin::Ssh_diskspace < Service_watcher::Plugin
         "passwd" => paras["txtpasswd"]
       )
       
-      if !Knj::Php.is_numeric(paras["txtwarnperc"])
+      if !(Float(paras["txtwarnperc"]) rescue false)
         raise _("Warning percent is not numeric - please enter it correctly as number only.")
       end
       
@@ -54,8 +48,8 @@ class Service_watcher::Plugin::Ssh_diskspace < Service_watcher::Plugin
 		
 		match = output.match(/([0-9]+)%/)
 		
-		if !match or !match[1] or !Knj::Php.is_numeric(match[1])
-			raise _("Error in result from the server.") + "\n\nMatch:\n#{Knj::Php.print_r(match, true)}\n\nResult:\n#{output}"
+		if !match or !match[1] or !(Float(match[1]) rescue false)
+			raise _("Error in result from the server.") + "\n\nMatch:\n#{Php4r.print_r(match, true)}\n\nResult:\n#{output}"
 		end
 		
 		warnperc = paras["txtwarnperc"].to_i

@@ -1,6 +1,13 @@
 class Service_watcher
   attr_reader :appserver, :controllers, :db, :ob, :plugins, :reporters
   
+  #Autoloader for subclasses.
+  def self.const_missing(name)
+    require "#{File.dirname(__FILE__)}/../include/#{name.to_s.downcase}.rb"
+    raise "Still not defined: '#{name}'." if !Service_watcher.const_defined?(name)
+    return Service_watcher.const_get(name)
+  end
+  
   class Controllers; end
   class Plugin; end
   class Reporter; end
@@ -21,7 +28,7 @@ class Service_watcher
     require "#{@args[:knjrbfw_path]}knjrbfw"
     require "knj/strings"
     require "knj/db"
-    require "knj/php"
+    require "php4r"
     require "knj/objects"
     require "knj/datarow"
     
@@ -42,10 +49,10 @@ class Service_watcher
         plugin_name = plugin_file.slice(28..-4)
         @plugins[plugin_name] = {
           :name => plugin_name,
-          :class => Service_watcher::Plugin.const_get(Knj::Php.ucwords(plugin_name))
+          :class => Service_watcher::Plugin.const_get(Php4r.ucwords(plugin_name))
         }
         
-        #autoload(("ServiceWatcherPlugin" + Knj::Php.ucwords(plugin_file.slice(28..-4))).to_sym, plugins_path + "/" + plugin_file)
+        #autoload(("ServiceWatcherPlugin" + Php4r.ucwords(plugin_file.slice(28..-4))).to_sym, plugins_path + "/" + plugin_file)
       end
     end
     
@@ -56,10 +63,10 @@ class Service_watcher
       next if reporter_file == "." or reporter_file == ".."
       require "#{reporters_path}/#{reporter_file}"
       
-      reporter_name = Knj::Php.ucwords(reporter_file.slice(30..-4))
+      reporter_name = Php4r.ucwords(reporter_file.slice(30..-4))
       @reporters[reporter_name] = {
         :name => reporter_name,
-        :class => Service_watcher::Reporter.const_get(Knj::Php.ucwords(reporter_name))
+        :class => Service_watcher::Reporter.const_get(Php4r.ucwords(reporter_name))
       }
     end
     
@@ -74,12 +81,7 @@ class Service_watcher
     end
     
     #Make sure database is updated.
-    dbschemapath = "#{File.dirname(__FILE__)}/../files/database_schema.rb"
-    raise "'#{dbschemapath}' did not exist." if !File.exists?(dbschemapath)
-    require dbschemapath
-    raise "No schema-variable was spawned." if !$schema
-    dbrev = Knj::Db::Revision.new
-    dbrev.init_db("schema" => $schema, "db" => @db)
+    Knj::Db::Revision.new.init_db("schema" => Service_watcher::Database::SCHEMA, "db" => @db)
     
     
     #Spawn objects-handler.
@@ -100,7 +102,7 @@ class Service_watcher
       next if !match
       
       require "#{controllers_path}/#{controller_file}"
-      @controllers[match[1].downcase] = Service_watcher::Controllers.const_get(Knj::Php.ucwords(match[1])).new(:sw => self)
+      @controllers[match[1].downcase] = Service_watcher::Controllers.const_get(Php4r.ucwords(match[1])).new(:sw => self)
     end
     
     
@@ -122,7 +124,6 @@ class Service_watcher
       :smtp_args => @args[:smtp]
     }
     appserver_args[:knjrbfw_path] = @args[:knjrbfw_path] if @args.key?(:knjrbfw_path)
-    appserver_args[:knjdbrevision_path] = @args[:knjdbrevision_path] if @args.key?(:knjdbrevision_path)
     appserver_args.merge!(@args[:knjappserver_args]) if @args.key?(:knjappserver_args)
     @appserver = Knjappserver.new(appserver_args)
     
@@ -178,7 +179,7 @@ class Service_watcher
     end
     
     if !args["plugin"] and args["pluginname"]
-      classob = Service_watcher::Plugin.const_get(Knj::Php.ucwords(args["pluginname"]))
+      classob = Service_watcher::Plugin.const_get(Php4r.ucwords(args["pluginname"]))
       if classob.respond_to?("check")
         staticmethod = true
       else

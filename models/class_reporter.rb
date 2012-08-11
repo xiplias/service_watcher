@@ -46,7 +46,7 @@ class Service_watcher::Model::Reporter < Knj::Datarow
   
   def reporter_plugin
     raise sprintf(_("No plugin has been set for this reporter (%s)."), self.id) if self[:plugin].to_s.strip.length <= 0
-    return Service_watcher::Reporter.const_get(Knj::Php::ucwords(self[:plugin])).new(self.details)
+    return Service_watcher::Reporter.const_get(Php4r.ucwords(self[:plugin])).new(self.details)
   end
   
   def groups(args = {})
