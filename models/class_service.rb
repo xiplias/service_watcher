@@ -71,7 +71,7 @@ class Service_watcher::Model::Service < Knj::Datarow
   
   def plugin_class
     raise _("No plugin set for this service.") if self[:plugin].to_s.length <= 0
-    return Service_watcher::Plugin.const_get(Knj::Php.ucwords(self[:plugin]))
+    return Service_watcher::Plugin.const_get(Php4r.ucwords(self[:plugin]))
   end
   
   def check

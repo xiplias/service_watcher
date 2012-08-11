@@ -15,7 +15,7 @@ class Service_watcher::Controllers::Reporter < Service_watcher::Controller
   end
   
   def plugin_args
-    return Service_watcher::Reporter.const_get(Knj::Php.ucwords(_get["plugin_name"])).paras
+    return Service_watcher::Reporter.const_get(Php4r.ucwords(_get["plugin_name"])).paras
   end
   
   def list
@@ -97,6 +97,6 @@ class Service_watcher::Controllers::Reporter < Service_watcher::Controller
   end
   
   def args
-    return Service_watcher::Reporter.const_get(Knj::Php.ucwords(_get["reporter_name"])).paras
+    return Service_watcher::Reporter.const_get(Php4r.ucwords(_get["reporter_name"])).paras
   end
 end

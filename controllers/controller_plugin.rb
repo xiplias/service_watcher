@@ -22,6 +22,6 @@ class Service_watcher::Controllers::Plugin < Service_watcher::Controller
   end
   
   def args
-    return Service_watcher::Plugin.const_get(Knj::Php.ucwords(_get["plugin_name"])).paras
+    return Service_watcher::Plugin.const_get(Php4r.ucwords(_get["plugin_name"])).paras
   end
 end

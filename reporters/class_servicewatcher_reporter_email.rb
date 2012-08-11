@@ -24,8 +24,8 @@ class Service_watcher::Reporter::Email < Service_watcher::Reporter
 		
 		require "datet"
 		require "knj/web"
-		require "knj/php"
-		require "knj/errors"
+		require "php4r"
+		require "datet"
 		
 		details = error_hash["reporter"].details
 		
@@ -45,7 +45,7 @@ class Service_watcher::Reporter::Email < Service_watcher::Reporter
 		html += "</tr><tr>"
 		html += "<td colspan=\"2\"><b>#{_("Error")}</b></td>"
 		html += "</tr><tr>"
-		html += "<td colspan=\"2\" style=\"margin-left: 9px;\">#{Knj::Php.nl2br(Knj::Errors.error_str(error_hash["error"]).to_s.html)}</td>"
+		html += "<td colspan=\"2\" style=\"margin-left: 9px;\">#{Php4r.nl2br(Knj::Errors.error_str(error_hash["error"]).to_s.html)}</td>"
 		html += "</tr></table>"
 		
 		_kas.mail(

@@ -53,7 +53,8 @@ class Service_watcher::Client
   
   #Initializes the HTTP-connection to the server with the given arguments.
   def initialize(args)
-    require "json/pure"
+    require "http2"
+    require "json"
     
     @http = Http2.new(
       :host => args[:host],
@@ -123,7 +124,7 @@ class Service_watcher::Client
     raise ArgumentError, _("Server returned an empty response. An error probaly occurred on the server.") if res.body.strip.length <= 0
     
     begin
-      ret = JSON.parse(Knj::Php.gzuncompress(res.body))
+      ret = JSON.parse(Php4r.gzuncompress(res.body))
     rescue JSON::ParserError => e
       _kas.dprint "Could parse JSON from:\n\n#{res.body}\n\n"
       raise e
