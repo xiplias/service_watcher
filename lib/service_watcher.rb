@@ -19,11 +19,6 @@ class Service_watcher
     
     require "#{@args[:knjappserver_path]}knjappserver"
     require "#{@args[:knjrbfw_path]}knjrbfw"
-    require "knj/strings"
-    require "knj/db"
-    require "knj/php"
-    require "knj/objects"
-    require "knj/datarow"
     
     require "rubygems"
     require "json"
@@ -78,8 +73,7 @@ class Service_watcher
     raise "'#{dbschemapath}' did not exist." if !File.exists?(dbschemapath)
     require dbschemapath
     raise "No schema-variable was spawned." if !$schema
-    dbrev = Knj::Db::Revision.new
-    dbrev.init_db("schema" => $schema, "db" => @db)
+    Knj::Db::Revision.new.init_db("schema" => $schema, "db" => @db)
     
     
     #Spawn objects-handler.
