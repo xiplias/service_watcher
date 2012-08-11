@@ -137,8 +137,6 @@ class Service_watcher::Client
     
     if ret["type"] == "error"
       begin
-        require "knj/autoload"
-        
         begin
           const = Knj::Strings.const_get_full(ret["error_type"])
         rescue NameError
