@@ -76,15 +76,7 @@ class Service_watcher
     end
     
     #Make sure database is updated.
-<<<<<<< HEAD
-    dbschemapath = "#{File.dirname(__FILE__)}/../files/database_schema.rb"
-    raise "'#{dbschemapath}' did not exist." if !File.exists?(dbschemapath)
-    require dbschemapath
-    raise "No schema-variable was spawned." if !$schema
-    Knj::Db::Revision.new.init_db("schema" => $schema, "db" => @db)
-=======
     Knj::Db::Revision.new.init_db("schema" => Service_watcher::Database::SCHEMA, "db" => @db)
->>>>>>> 70f823b4859be4fca85cc761ab8c0176b2c2f573
     
     
     #Spawn objects-handler.
