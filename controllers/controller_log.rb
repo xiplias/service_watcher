@@ -1,6 +1,6 @@
 class Service_watcher::Controllers::Log < Service_watcher::Controller
   def list
-    logs = _kas.ob.list(:Log, _get["args"])
+    logs = _hb.ob.list(:Log, _get["args"])
     
     ret = []
     logs.each do |log|
@@ -11,7 +11,7 @@ class Service_watcher::Controllers::Log < Service_watcher::Controller
   end
   
   def get
-    log = _kas.ob.get(:Log, _get["object_id"])
+    log = _hb.ob.get(:Log, _get["object_id"])
     return self.client_data(log)
   end
   

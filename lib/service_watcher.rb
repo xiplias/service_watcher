@@ -24,7 +24,7 @@ class Service_watcher
       :host => "0.0.0.0"
     }.merge(args)
     
-    require "#{@args[:knjappserver_path]}knjappserver"
+    require "#{@args[:hayabusa_path]}hayabusa"
     require "#{@args[:knjrbfw_path]}knjrbfw"
     require "knj/strings"
     require "knj/db"
@@ -126,8 +126,8 @@ class Service_watcher
       :smtp_args => @args[:smtp]
     }
     appserver_args[:knjrbfw_path] = @args[:knjrbfw_path] if @args.key?(:knjrbfw_path)
-    appserver_args.merge!(@args[:knjappserver_args]) if @args.key?(:knjappserver_args)
-    @appserver = Knjappserver.new(appserver_args)
+    appserver_args.merge!(@args[:hayabusa_args]) if @args.key?(:hayabusa_args)
+    @appserver = Hayabusa.new(appserver_args)
     
     
     #Define various variables which should be available in the various controllers.
@@ -266,7 +266,7 @@ class Service_watcher
     }]
   end
   
-  #Stops the service-watcher gracefully. Stops the knjappserver and lets the checker-thread finish before killing it.
+  #Stops the service-watcher gracefully. Stops the hayabusa and lets the checker-thread finish before killing it.
   def stop
     @appserver.stop
     

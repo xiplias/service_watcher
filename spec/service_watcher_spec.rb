@@ -4,7 +4,7 @@ describe "ServiceWatcher" do
   it "should require all its requirements" do
     require "rubygems"
     require "service_watcher"
-    require "knjappserver"
+    require "hayabusa"
     require "mail"
     require "knjrbfw"
     require "sqlite3"
@@ -29,7 +29,7 @@ describe "ServiceWatcher" do
     $sw = Service_watcher.new(
       :port => 1515,
       :db => @db_sample,
-      :knjappserver_args => {
+      :hayabusa_args => {
         #:knjrbfw_path => "/home/kaspernj/Dev/Ruby/knjrbfw/lib/"
       }
     )
