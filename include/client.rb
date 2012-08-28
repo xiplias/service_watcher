@@ -68,7 +68,7 @@ class Service_watcher::Client
     return self.request(:c => :user, :a => :login, :username => args[:username], :password => args[:password])
   end
   
-  #Used to recursively convert hash- and array-arguments to a valid Knjappserver-URL-arguments-string. No need to call this manually - it is used from the request-method.
+  #Used to recursively convert hash- and array-arguments to a valid Hayabusa-URL-arguments-string. No need to call this manually - it is used from the request-method.
   def args_rec(orig_key, obj, first)
     url = ""
     first_ele = true
@@ -126,17 +126,17 @@ class Service_watcher::Client
     begin
       ret = JSON.parse(Php4r.gzuncompress(res.body))
     rescue JSON::ParserError, Zlib::DataError => e
-      _kas.dprint "Could parse JSON from:\n\n#{res.body}\n\n"
+      _hb.dprint "Could parse JSON from:\n\n#{res.body}\n\n"
       raise e
     rescue => e
-      _kas.dprint "Error when parsing content from server."
+      _hb.dprint "Error when parsing content from server."
       
-      _kas.dprint "\nHeaders:"
-      _kas.dprint res.headers
+      _hb.dprint "\nHeaders:"
+      _hb.dprint res.headers
       
-      _kas.dprint "\nBody:"
-      _kas.dprint res.body
-      _kas.dprint "\n\n"
+      _hb.dprint "\nBody:"
+      _hb.dprint res.body
+      _hb.dprint "\n\n"
       
       STDOUT.puts e.inspect
       STDOUT.puts e.backtrace

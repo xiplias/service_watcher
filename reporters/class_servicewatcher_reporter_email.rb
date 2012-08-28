@@ -48,7 +48,7 @@ class Service_watcher::Reporter::Email < Service_watcher::Reporter
 		html += "<td colspan=\"2\" style=\"margin-left: 9px;\">#{Php4r.nl2br(Knj::Errors.error_str(error_hash["error"]).to_s.html)}</td>"
 		html += "</tr></table>"
 		
-		_kas.mail(
+		_hb.mail(
       :to => details["txtaddress"],
       :from => details["txtfromaddress"],
       :subject => Service_watcher.parse_subject(
