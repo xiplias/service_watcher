@@ -24,15 +24,10 @@ class Service_watcher
       :host => "0.0.0.0"
     }.merge(args)
     
+    require "rubygems"
     require "#{@args[:hayabusa_path]}hayabusa"
     require "#{@args[:knjrbfw_path]}knjrbfw"
-    require "knj/strings"
-    require "knj/db"
     require "php4r"
-    require "knj/objects"
-    require "knj/datarow"
-    
-    require "rubygems"
     require "json"
     require "net/http"
     

@@ -129,9 +129,20 @@ class Service_watcher::Client
       _hb.dprint "Could parse JSON from:\n\n#{res.body}\n\n"
       raise e
     rescue => e
-      #_hb.dprint "Error when parsing content from server."
-      #_hb.dprint res.headers
-      #_hb.dprint res.body
+      _hb.dprint "Error when parsing content from server."
+      
+      _hb.dprint "\nHeaders:"
+      _hb.dprint res.headers
+      
+      _hb.dprint "\nBody:"
+      _hb.dprint res.body
+      _hb.dprint "\n\n"
+      
+      STDOUT.puts e.inspect
+      STDOUT.puts e.backtrace
+      
+      STDOUT.print "\n\n"
+      
       raise e
     end
     
