@@ -34,7 +34,7 @@ class Service_watcher::Plugin::Ssh_file_exists < Service_watcher::Plugin
   def self.check(paras)
     require "knj/sshrobot"
     require "knj/cmd_parser"
-    require "knj/retry"
+    
     require "datet"
     require "knj/strings"
     
