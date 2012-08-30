@@ -40,7 +40,7 @@ class Service_watcher::Plugin::Ssh_file_exists < Service_watcher::Plugin
     
     sshrobot = nil
     output = nil
-    Knj::Retry.try(:tries => 3, :wait => 2, :errors => [Errno::ETIMEDOUT, Errno::EHOSTUNREACH]) do
+    Tretry.try(:tries => 3, :wait => 2, :errors => [Errno::ETIMEDOUT, Errno::EHOSTUNREACH]) do
       sshrobot = Knj::SSHRobot.new(
         "host" => paras["txthost"],
         "port" => paras["txtport"].to_i,

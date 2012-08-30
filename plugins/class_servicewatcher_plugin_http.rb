@@ -31,7 +31,7 @@ class Service_watcher::Plugin::Http < Service_watcher::Plugin
 		require "net/https"
 		require "knj/retry"
 		
-		Knj::Retry.try(:tries => 3, :wait => 2, :errors => [SocketError]) do
+		Tretry.try(:tries => 3, :wait => 2, :errors => [SocketError]) do
       http = Net::HTTP.new(paras["txthost"], paras["txtport"])
       http.read_timeout = paras["txttimeout"].to_i
       

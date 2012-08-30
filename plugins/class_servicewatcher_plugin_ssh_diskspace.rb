@@ -25,7 +25,7 @@ class Service_watcher::Plugin::Ssh_diskspace < Service_watcher::Plugin
 	
 	def self.check(paras)
     output = nil
-    Knj::Retry.try(:tries => 3, :timeout => 15, :wait => 2, :errors => [Errno::ETIMEDOUT, Errno::EHOSTUNREACH]) do
+    Tretry.try(:tries => 3, :timeout => 15, :wait => 2, :errors => [Errno::ETIMEDOUT, Errno::EHOSTUNREACH]) do
       sshrobot = Knj::SSHRobot.new(
         "host" => paras["txthost"],
         "port" => paras["txtport"].to_i,

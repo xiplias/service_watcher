@@ -8,6 +8,7 @@ gem "knjrbfw"
 gem "knjappserver"
 gem "mail"
 gem "http2"
+gem "tretry"
 
 # Add dependencies to develop your gem here.
 # Include everything needed to run rake, tests, features, etc.
