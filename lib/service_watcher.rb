@@ -30,6 +30,7 @@ class Service_watcher
     require "php4r"
     require "json"
     require "net/http"
+    Knj.gem_require("tretry")
     
     @plugins = {}
     
