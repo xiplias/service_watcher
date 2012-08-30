@@ -25,12 +25,14 @@ class Service_watcher
     }.merge(args)
     
     require "rubygems"
-    require "#{@args[:hayabusa_path]}hayabusa"
     require "#{@args[:knjrbfw_path]}knjrbfw"
-    require "php4r"
     require "json"
     require "net/http"
-    Knj.gem_require("tretry")
+    
+    #Load various gems.
+    Knj.gem_require(:Hayabusa, "hayabusa")
+    Knj.gem_require(:Php4r, "php4r")
+    Knj.gem_require(:Tretry, "tretry")
     
     @plugins = {}
     
