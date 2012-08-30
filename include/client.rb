@@ -125,7 +125,7 @@ class Service_watcher::Client
     
     begin
       ret = JSON.parse(Php4r.gzuncompress(res.body))
-    rescue JSON::ParserError => e
+    rescue JSON::ParserError, Zlib::DataError => e
       _hb.dprint "Could parse JSON from:\n\n#{res.body}\n\n"
       raise e
     rescue => e
