@@ -21,10 +21,11 @@ class Service_watcher::Plugin::Ssh_memory_usage < Service_watcher::Plugin
 	end
 	
 	def self.check(paras)
+    Knj.gem_require(:Tretry, "tretry")
     warn_perc = paras["txtwarnperc"].to_f
     
     output = nil
-    Knj::Retry.try(:tries => 3, :timeout => 15, :wait => 2, :errors => [Errno::ETIMEDOUT, Errno::EHOSTUNREACH]) do
+    Tretry.try(:tries => 3, :timeout => 15, :wait => 2, :errors => [Errno::ETIMEDOUT, Errno::EHOSTUNREACH]) do
       sshrobot = Knj::SSHRobot.new(
         "host" => paras["txthost"],
         "port" => paras["txtport"].to_i,
