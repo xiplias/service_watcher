@@ -144,25 +144,27 @@ class Service_watcher
     @appserver.thread_init
     
     loop do
-      Thread.current[:running] = true
-      @ob.list(:Service) do |service|
-        run = false
-        service_date = service.date_lastrun
-        
-        if !service_date
-          run = true
-        else
-          service_time = service_date.time.to_i
-          if (service_time + service[:timeout].to_i) < Time.now.to_i
+      begin
+        Thread.current[:running] = true
+        @ob.list(:Service) do |service|
+          run = false
+          service_date = service.date_lastrun
+          
+          if !service_date
             run = true
+          else
+            service_time = service_date.time.to_i
+            if (service_time + service[:timeout].to_i) < Time.now.to_i
+              run = true
+            end
           end
+          
+          self.check_and_report(service) if run
         end
-        
-        self.check_and_report(service) if run
+        Thread.current[:running] = false
+      ensure
+        sleep 1
       end
-      Thread.current[:running] = false
-      
-      sleep 1
     end
   end
   
